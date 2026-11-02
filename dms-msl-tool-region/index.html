@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hero SKU Region U/R</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-header">
+    <h1>Hero SKU Data Generation — Region × U/R</h1>
+  </header>
+
+  <div class="stepper">
+    <div class="step-pill" data-step="upload"><b>Bước 1</b>Tải file dữ liệu</div>
+    <div class="step-pill" data-step="params"><b>Bước 2</b>Thiết lập</div>
+    <div class="step-pill hidden-step" id="step-gaps" data-step="gaps"><b>Bước 3</b>Bổ sung dữ liệu thiếu</div>
+    <div class="step-pill" data-step="report"><b>Bước 4</b>Xem báo cáo</div>
+    <div class="step-pill" data-step="download"><b>Bước 5</b>Tải file kết quả</div>
+  </div>
+
+  <!-- ==================== BƯỚC 1: TẢI FILE ==================== -->
+  <section class="screen active" id="screen-upload">
+
+    <div class="card">
+      <div class="mode-group">
+        <label class="mode-card">
+          <input type="radio" name="run-mode" value="create" checked>
+          <span>
+            <span class="opt-title">🆕 Tạo mới đầu tháng</span>
+            <span class="opt-sub">Chốt danh sách MSL cho đợt Hero SKU mới. Xuất ra đủ 4 file để upload lần đầu.</span>
+          </span>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="run-mode" value="update">
+          <span>
+            <span class="opt-title">🔄 Cập nhật giữa tháng</span>
+            <span class="opt-sub">Kiểm tra tồn kho hôm nay, tìm SKU vừa có hàng và bổ sung vào đợt đang chạy. Chỉ xuất phần cần thêm.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Bước 1 — Tải lên các file dữ liệu</h2>
+      <p class="muted">Kéo-thả hoặc bấm vào từng ô để chọn file. Công cụ sẽ tự kiểm tra file có đúng định dạng hay không.</p>
+      <div class="hint">
+        <b>Bản này dành cho template HERO NEW mới:</b> danh sách chia theo <b>Region × OTD L4 × Segment × U/R</b>
+        (không còn cột Area). Dòng G trong MSL_CUSTASSIGN lấy <b>node của Region</b>, có thêm cấp gán <b>U</b>
+        (Urban / Rural / Highland). Mã dạng <code>260211_N1_CHTL_A_HL</code>.
+        File HERO NEW cần các cột: <code>Region</code>, <code>OTD L4</code>, <code>Segment</code>, <code>U/R</code>, <code>SKU Groups</code>.
+      </div>
+
+      <h3>Dữ liệu nguồn từ Biz Team</h3>
+      <div class="dropzones">
+        <div class="dropzone" id="zone-hero">
+          <div class="icon">📊</div>
+          <div class="title">HERO NEW.xlsx</div>
+          <div class="status">Chưa chọn file</div>
+          <input type="file" id="file-hero" accept=".xlsx,.xls">
+        </div>
+        <div class="dropzone" id="zone-product">
+          <div class="icon">🏷️</div>
+          <div class="title">Product List.xlsx</div>
+          <div class="status">Chưa chọn file</div>
+          <input type="file" id="file-product" accept=".xlsx,.xls">
+        </div>
+        <div class="dropzone" id="zone-pinfo">
+          <div class="icon">📋</div>
+          <div class="title">PRODUCT_INFO.csv</div>
+          <div class="status">Chưa chọn file</div>
+          <input type="file" id="file-pinfo" accept=".csv">
+        </div>
+        <div class="dropzone" id="zone-invt">
+          <div class="icon">📦</div>
+          <div class="title">INVT_MASTER.csv</div>
+          <div class="status">Chưa chọn file</div>
+          <input type="file" id="file-invt" accept=".csv">
+        </div>
+      </div>
+
+      <div class="hint">
+        <b>Tồn kho</b> lấy từ <b>INVT_MASTER.csv</b> — file xuất được từ hệ thống. Công cụ tự lọc
+        <b>Status Code = A</b>, chỉ tính kho <b>MAIN_WHS / MAIN_WHS2 / KHOCUAHANG</b>, bỏ NPP đã ngưng kinh doanh
+        và khử dòng trùng lặp. Mã NPP được tra sang Region bằng bảng có sẵn trong công cụ, rồi
+        <b>cộng tồn của mọi NPP trong cùng Region</b>.
+      </div>
+
+      <details class="collapsible">
+        <summary>Dùng Stock Area.xlsx thay thế</summary>
+        <p class="muted">Cột GroupName (Area) được đổi sang Region rồi cộng dồn. Nếu tải cả hai, công cụ ưu tiên INVT_MASTER.csv.</p>
+        <div class="dropzones">
+          <div class="dropzone" id="zone-stock">
+            <div class="icon">🗄️</div>
+            <div class="title">Stock Area.xlsx</div>
+            <div class="status">Chưa chọn file</div>
+            <input type="file" id="file-stock" accept=".xlsx,.xls">
+          </div>
+        </div>
+      </details>
+
+      <div class="hint" data-only-mode="update" style="display:none">
+        Ở chế độ cập nhật, hãy dùng <b>file tồn kho xuất trong ngày hôm nay</b> để phát hiện hàng vừa về.
+      </div>
+
+      <div data-only-mode="update" style="display:none">
+        <h3>File của lần upload gần nhất <span class="muted" style="font-weight:400">(dùng làm mốc đối chiếu)</span></h3>
+        <div class="dropzones">
+          <div class="dropzone" id="zone-baseinfo">
+            <div class="icon">🗂️</div>
+            <div class="title">MSL_INFO.csv <span class="muted">(đã upload)</span></div>
+            <div class="status">Chưa chọn file</div>
+            <input type="file" id="file-baseinfo" accept=".csv">
+          </div>
+          <div class="dropzone" id="zone-basecust">
+            <div class="icon">🗂️</div>
+            <div class="title">MSL_CUSTASSIGN.CSV <span class="muted">(đã upload)</span></div>
+            <div class="status">Chưa chọn file</div>
+            <input type="file" id="file-basecust" accept=".csv">
+          </div>
+          <div class="dropzone" id="zone-baseprd">
+            <div class="icon">🗂️</div>
+            <div class="title">MSL_PRDASSIGN.csv <span class="muted">(đã upload)</span></div>
+            <div class="status">Chưa chọn file</div>
+            <input type="file" id="file-baseprd" accept=".csv">
+          </div>
+        </div>
+        <div class="hint">
+          Ba file này chính là những gì DMS <b>đang có</b>. Công cụ đọc mã đợt và ngày hiệu lực từ đây để giữ nguyên,
+          đọc MSL_CUSTASSIGN để biết mã nào là mã gộp, rồi so sánh để tìm ra phần còn thiếu.<br>
+          • <b>Lần cập nhật đầu tiên của đợt:</b> dùng 3 file MSL_INFO / MSL_CUSTASSIGN / MSL_PRDASSIGN đã upload đầu tháng.<br>
+          • <b>Các lần sau:</b> dùng bộ file <code>MOC_MSL_*.csv</code> mà công cụ xuất ra ở lần cập nhật trước.
+        </div>
+      </div>
+
+      <div class="hint">
+        <b>PRODUCT_INFO.csv</b> dùng để lọc sản phẩm còn hiệu lực: chỉ giữ
+        <b>Status of the Product = A</b>, <b>Selling Type = 1</b>, <b>Parent Product Code (SKU) để trống</b>.
+        Riêng sản phẩm có <b>New SKU Ind = Y</b> (SKU mới ra mắt) <b>luôn được giữ lại kể cả khi tồn kho = 0</b>.
+      </div>
+
+      <details class="collapsible" style="margin-top:14px;">
+        <summary>Xem trước dữ liệu đã đọc được</summary>
+        <h3>HERO NEW.xlsx</h3><div id="preview-hero"></div>
+        <h3>Product List.xlsx</h3><div id="preview-product"></div>
+        <h3>PRODUCT_INFO.csv</h3><div id="preview-pinfo"></div>
+        <h3>Tồn kho</h3><div id="preview-stock"></div>
+      </details>
+
+      <div class="btn-row">
+        <span></span>
+        <button class="btn" id="btn-to-params" disabled>Tiếp tục →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BƯỚC 2: THIẾT LẬP ==================== -->
+  <section class="screen" id="screen-params">
+    <div class="card">
+      <h2 id="params-title">Bước 2 — Thiết lập cho đợt tạo file lần này</h2>
+      <div id="cfg-warning" class="hint warn" style="display:none"></div>
+      <details class="collapsible" open>
+        <summary>Cấu hình Region / U/R đang dùng</summary>
+        <p class="muted">Viết tắt dùng để ghép mã MSL; node G và mã U ghi vào MSL_CUSTASSIGN.
+          Region / giá trị U/R mới chưa có trong bảng sẽ được hỏi ở Bước 3.</p>
+        <div id="cfg-table"></div>
+      </details>
+
+      <!-- Chế độ tạo mới -->
+      <div data-only-mode="create">
+        <div class="hint">Những thông tin này không có trong file Excel đầu vào nên cần bạn nhập mỗi lần tạo file mới.</div>
+        <div class="row">
+          <div class="field">
+            <label>Tiền tố ngày cho mã MSL (6 chữ số, dạng NNTTNG)</label>
+            <input type="text" id="inp-prefix" maxlength="6" placeholder="VD: 260801">
+            <div class="sub">Sẽ ghép vào trước mã, ví dụ: 260801_N1_CHTL_A_HL</div>
+          </div>
+          <div class="field">
+            <label>Start Date</label>
+            <input type="date" id="inp-start">
+          </div>
+          <div class="field">
+            <label>End Date</label>
+            <input type="date" id="inp-end">
+          </div>
+        </div>
+
+        <h3>Cách xử lý sản phẩm hết tồn kho</h3>
+        <p class="muted">Tồn kho cộng dồn theo từng <b>Region</b> (mọi NPP thuộc Region), lấy từ cột Stock Available
+          trong INVT_MASTER.csv (hoặc cột AVAILABLE_STK nếu dùng Stock Area.xlsx). SKU còn hàng ở bất kỳ NPP nào
+          trong Region thì được giữ cho danh sách của Region đó.</p>
+        <div class="radio-card-group">
+          <label class="radio-card">
+            <input type="radio" name="stock-mode" value="onlyInStock" checked>
+            <span>
+              <span class="opt-title">Chỉ lấy sản phẩm còn tồn kho</span>
+              <span class="opt-sub">Chỉ tiêu sát thực tế. Trong tháng có thể dùng chế độ &laquo;Cập nhật giữa tháng&raquo; để bổ sung dần khi hàng về.</span>
+            </span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="stock-mode" value="includeAll">
+            <span>
+              <span class="opt-title">Giữ lại cả SKU có tồn kho = 0</span>
+              <span class="opt-sub">Chỉ giữ khi Region <b>có kinh doanh</b> mặt hàng đó nhưng đang tạm hết
+                (có dòng tồn kho ghi 0).</span>
+            </span>
+          </label>
+        </div>
+        <div class="hint warn">
+          <b>Lưu ý:</b> DMS chỉ cộng dồn khi upload, không xoá được SKU đã đưa lên.
+          Danh sách chốt đầu tháng chỉ có thể <b>tăng thêm</b>, không thể bớt đi cho tới khi hết hạn.
+        </div>
+      </div>
+
+      <!-- Chế độ cập nhật -->
+      <div data-only-mode="update" style="display:none">
+        <div class="hint ok" id="upd-detected">Đang đọc thông tin đợt từ file mốc...</div>
+        <p class="muted">
+          Ở chế độ cập nhật, mã MSL và ngày hiệu lực được <b>giữ nguyên theo đợt đang chạy</b> — không nhập tay,
+          để tránh việc DMS tạo ra danh sách mới thay vì cập nhật danh sách hiện có.
+        </p>
+        <div class="hint warn">
+          <b>Quy tắc an toàn:</b> vì DMS cộng dồn khi upload, công cụ chỉ sinh ra phần <b>cần thêm</b>.
+          File CONDITION và CUSTASSIGN chỉ chứa danh sách <b>mới phát sinh</b> — nếu upload lại chúng cho danh sách
+          đang chạy sẽ bị nhân đôi dòng.
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-params-back">← Quay lại</button>
+        <button class="btn" id="btn-params-next">Tiếp tục →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BƯỚC 3: BỔ SUNG DỮ LIỆU ==================== -->
+  <section class="screen" id="screen-gaps">
+    <div class="card">
+      <h2>Bước 3 — Bổ sung dữ liệu còn thiếu</h2>
+      <div class="hint warn">
+        Công cụ phát hiện một số dữ liệu chưa có trong bảng tra cứu. Vui lòng nhập bổ sung, hoặc tick
+        &laquo;Bỏ qua&raquo; nếu muốn loại phần đó khỏi file xuất ra. Thông tin bạn nhập sẽ được ghi nhớ cho các lần chạy sau trên máy này.
+      </div>
+
+      <div class="gap-section" id="sec-regions">
+        <h3>① Region chưa có cấu hình (viết tắt trong mã, node G trong CUSTASSIGN)</h3>
+        <p class="muted">Cần nhập đủ viết tắt và node G. Bỏ trống hoặc tick &laquo;Bỏ qua&raquo; thì các danh sách của Region đó không được tạo.</p>
+        <div id="gap-regions"></div>
+      </div>
+      <div class="gap-section" id="sec-urs">
+        <h3>② Giá trị U/R chưa có cấu hình (viết tắt trong mã, mã cấp U trong CUSTASSIGN)</h3>
+        <p class="muted">Cần nhập đủ viết tắt và mã U. Bỏ trống hoặc tick &laquo;Bỏ qua&raquo; thì các danh sách mang giá trị đó không được tạo.</p>
+        <div id="gap-urs"></div>
+      </div>
+      <div class="gap-section" id="sec-sku">
+        <h3>③ SKU Groups chưa tìm được Item Code trong Product List</h3>
+        <div id="gap-sku"></div>
+      </div>
+      <div class="gap-section" id="sec-dist">
+        <h3>④ Nhà phân phối mới trong INVT_MASTER chưa có Region</h3>
+        <p class="muted">Nhập Region cho NPP mới (Area không bắt buộc), hoặc tick &laquo;Đã ngưng kinh doanh&raquo; để bỏ qua toàn bộ tồn kho của họ.</p>
+        <div id="gap-dist"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-gaps-back">← Quay lại</button>
+        <button class="btn" id="btn-gaps-next">Xử lý &amp; xem báo cáo →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BƯỚC 4: BÁO CÁO ==================== -->
+  <section class="screen" id="screen-report">
+
+    <!-- Báo cáo chế độ TẠO MỚI -->
+    <div class="card" data-only-mode="create">
+      <h2>Bước 4 — Báo cáo tổng hợp trước khi xuất file</h2>
+      <div id="cfg-warning-report" class="hint warn" style="display:none"></div>
+      <div id="report-mode-banner" class="hint ok"></div>
+      <div id="merge-applied-banner" class="hint ok" style="display:none"></div>
+      <div id="length-check" class="hint ok"></div>
+      <p class="muted" id="report-stock-source"></p>
+      <p class="muted" id="report-pinfo-note"></p>
+
+      <div class="summary-grid">
+        <button class="summary-tile" data-jump="sec-alllists"><div class="num" id="sum-mslcount">0</div><div class="lbl">Danh sách MSL sẽ tạo</div></button>
+        <button class="summary-tile" data-jump="sec-skusummary"><div class="num" id="sum-skucount">0</div><div class="lbl">Dòng SKU trong PRDASSIGN</div></button>
+        <button class="summary-tile good" data-jump="sec-newsku"><div class="num" id="sum-newsku">0</div><div class="lbl">Dòng giữ lại nhờ SKU mới</div></button>
+        <button class="summary-tile warn" data-jump="sec-filtered"><div class="num" id="sum-filtered">0</div><div class="lbl">SKU loại theo PRODUCT_INFO</div></button>
+        <button class="summary-tile warn" data-jump="sec-nostock"><div class="num" id="sum-nostock">0</div><div class="lbl">SKU có tồn kho = 0</div></button>
+        <button class="summary-tile bad" data-jump="sec-empty"><div class="num" id="sum-empty">0</div><div class="lbl">Danh sách bị bỏ qua</div></button>
+      </div>
+
+      <details class="collapsible" open id="sec-byregion">
+        <summary>Thống kê theo Region <span class="count" id="cnt-byregion">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="byregion">⬇ Tải danh sách này</button>
+        <div id="detail-byregion"></div>
+      </details>
+
+      <details class="collapsible" open>
+        <summary>Gộp mã MSL trùng danh sách SKU <span class="count" id="cnt-merge">0</span></summary>
+        <div id="detail-merge"></div>
+        <div id="merge-actions" class="merge-bar">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="btn ghost" id="btn-merge-safe">Chọn nhóm chỉ khác 1 chiều</button>
+            <button class="btn ghost" id="btn-merge-sameregion">Chọn nhóm cùng Region</button>
+            <button class="btn ghost" id="btn-merge-all">Chọn tất cả</button>
+            <button class="btn ghost" id="btn-merge-none">Bỏ chọn hết</button>
+          </div>
+          <p class="muted" id="merge-summary"></p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="btn-apply-merge" disabled>✓ Áp dụng gộp vào cả 4 file</button>
+            <button class="btn ghost" id="btn-undo-merge" style="display:none">↺ Hoàn tác, giữ nguyên mã gốc</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="collapsible" id="sec-alllists">
+        <summary>Danh sách MSL sẽ tạo <span class="count" id="cnt-alllists">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="alllists">⬇ Tải danh sách này</button>
+        <div id="detail-alllists"></div>
+      </details>
+
+      <details class="collapsible" id="sec-skusummary">
+        <summary>Tổng hợp SKU được đưa vào danh sách <span class="count" id="cnt-skusummary">0</span></summary>
+        <p class="muted">Mỗi mã hàng xuất hiện ở bao nhiêu danh sách MSL và bao nhiêu Region. Mã có mặt ở ít danh sách thường là hàng phân phối hẹp.</p>
+        <button class="btn secondary btn-sm" data-export="skusummary">⬇ Tải danh sách này</button>
+        <div id="detail-skusummary"></div>
+      </details>
+
+      <details class="collapsible" id="sec-nostock">
+        <summary>SKU có tồn kho = 0 <span class="count" id="cnt-nostock">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="nostock">⬇ Tải danh sách này</button>
+        <div id="detail-nostock"></div>
+      </details>
+
+      <details class="collapsible" id="sec-newsku">
+        <summary>SKU mới được giữ lại dù hết tồn kho <span class="count" id="cnt-newsku">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="newsku">⬇ Tải danh sách này</button>
+        <div id="detail-newsku"></div>
+      </details>
+
+      <details class="collapsible" id="sec-filtered">
+        <summary>SKU bị loại bởi bộ lọc PRODUCT_INFO <span class="count" id="cnt-filtered">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="filtered">⬇ Tải danh sách này</button>
+        <div id="detail-filtered"></div>
+      </details>
+
+      <details class="collapsible" id="sec-missitem">
+        <summary>SKU Groups không tìm được Item Code <span class="count" id="cnt-missitem">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="missitem">⬇ Tải danh sách này</button>
+        <div id="detail-missitem"></div>
+      </details>
+
+      <details class="collapsible" id="sec-empty">
+        <summary>Danh sách MSL bị bỏ qua hoàn toàn <span class="count" id="cnt-empty">0</span></summary>
+        <button class="btn secondary btn-sm" data-export="empty">⬇ Tải danh sách này</button>
+        <div id="detail-empty"></div>
+      </details>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-report-back">← Quay lại</button>
+        <button class="btn" id="btn-report-next">Tiếp tục tải file →</button>
+      </div>
+    </div>
+
+    <!-- Báo cáo chế độ CẬP NHẬT -->
+    <div class="card" data-only-mode="update" style="display:none">
+      <h2>Bước 4 — Thay đổi phát hiện được hôm nay</h2>
+      <div id="cfg-warning-update" class="hint warn" style="display:none"></div>
+      <div id="upd-banner" class="hint ok"></div>
+
+      <div class="summary-grid">
+        <div class="summary-tile"><div class="num" id="upd-baseline">0</div><div class="lbl">Danh sách đang chạy trên DMS</div></div>
+        <div class="summary-tile"><div class="num" id="upd-newlists">0</div><div class="lbl">Danh sách MỚI phát sinh</div></div>
+        <div class="summary-tile"><div class="num" id="upd-grown">0</div><div class="lbl">Danh sách cần bổ sung SKU</div></div>
+        <div class="summary-tile"><div class="num" id="upd-addedsku">0</div><div class="lbl">Dòng SKU cần thêm</div></div>
+        <div class="summary-tile"><div class="num" id="upd-gone">0</div><div class="lbl">SKU trong DMS nay hết hàng</div></div>
+        <div class="summary-tile"><div class="num" id="upd-merged">0</div><div class="lbl">Mã gộp nhận diện được</div></div>
+      </div>
+      <div id="upd-unmatched" class="hint warn" style="display:none"></div>
+
+      <details class="collapsible" open><summary>Danh sách MỚI phát sinh (cần upload đủ 4 file)</summary>
+        <p class="muted">Gồm tổ hợp chưa có mã nào trên DMS, và tổ hợp nằm trong mã gộp nhưng cần SKU mà các tổ hợp khác
+          trong mã gộp không cần — phần SKU đó được tách ra danh sách riêng để không áp sai cho cả nhóm.</p>
+        <div id="upd-detail-new"></div></details>
+      <details class="collapsible" open><summary>Danh sách đang chạy cần bổ sung SKU</summary><div id="upd-detail-grown"></div></details>
+      <details class="collapsible" open id="upd-sec-manual" style="display:none">
+        <summary>Cần xử lý tay (công cụ không xuất)</summary>
+        <div id="upd-detail-manual"></div>
+      </details>
+      <details class="collapsible">
+        <summary>SKU đang có trên DMS nhưng nay đã hết hàng</summary>
+        <div class="hint">DMS không hỗ trợ xoá qua file import, nên phần này chỉ để theo dõi — công cụ không tự loại bỏ.</div>
+        <div id="upd-detail-gone"></div>
+      </details>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-report-back-2">← Quay lại</button>
+        <button class="btn" id="btn-report-next-2">Tiếp tục tải file →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BƯỚC 5: TẢI FILE ==================== -->
+  <section class="screen" id="screen-download">
+    <div class="card">
+      <h2>Bước 5 — Tải file kết quả</h2>
+
+      <div class="hint ok" data-only-mode="create">Hoàn tất! Bấm &laquo;Tải tất cả&raquo; để lấy đủ 4 file CSV upload lên DMS, hoặc tải riêng từng file.</div>
+      <div class="hint warn" data-only-mode="update" style="display:none">
+        <b>Thứ tự upload:</b> tải <code>MSL_INFO_UPDATE.csv</code> trước, rồi <code>MSL_CONDITION_NEW.csv</code> và
+        <code>MSL_CUSTASSIGN_NEW.CSV</code>, cuối cùng là <code>MSL_PRDASSIGN_ADD.csv</code>.
+        File nào có 0 dòng thì bỏ qua, không cần upload. <b>Các file <code>MOC_MSL_*.csv</code> không upload.</b>
+      </div>
+
+      <div class="dl-grid" id="dl-grid"></div>
+
+      <div data-only-mode="create">
+        <h3>File phân tích &amp; đối chiếu</h3>
+        <p class="muted">Dùng để gửi lại Biz Team hoặc rà soát trước khi chốt danh sách.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn secondary" id="btn-dl-report">⬇ BAO_CAO_DOI_CHIEU.csv</button>
+          <button class="btn secondary" id="btn-dl-region">⬇ THONG_KE_THEO_REGION.csv</button>
+          <button class="btn secondary" id="btn-dl-merge">⬇ DE_XUAT_GOP_MA.csv</button>
+        </div>
+      </div>
+
+      <div data-only-mode="update" style="display:none">
+        <h3>Bộ file mốc cho lần cập nhật sau</h3>
+        <div class="hint warn">
+          <b>Không upload các file <code>MOC_MSL_*.csv</code> lên DMS.</b> Đây là trạng thái DMS <b>sau khi</b> upload xong
+          các file phía trên (file mốc lần này + phần bổ sung, đã gộp sẵn). Lần cập nhật sau, tải 3 file này vào ô
+          &laquo;File của lần upload gần nhất&raquo; ở Bước 1. Nút &laquo;Tải tất cả file&raquo; cũng tải kèm 3 file này.<br>
+          Chưa upload được file nào thì <b>không dùng</b> bộ file này — dùng lại bộ file mốc cũ.
+          Đã upload được một phần (VD: lỗi ở <code>MSL_PRDASSIGN_ADD.csv</code>) thì sửa và upload lại cho đủ các file còn lại,
+          rồi mới dùng bộ file mốc mới — dùng lại bộ cũ sẽ làm công cụ xuất lại danh sách đã lên DMS và nhân đôi dòng.
+        </div>
+        <p class="muted" id="dl-baseline-note"></p>
+        <button class="btn secondary" id="btn-dl-baseline">⬇ Tải bộ file mốc (3 file)</button>
+
+        <h3>File theo dõi</h3>
+        <p class="muted">Nhật ký thay đổi trong ngày và danh sách SKU đã hết hàng để bạn theo dõi.</p>
+        <button class="btn secondary" id="btn-dl-change">⬇ Tải NHAT_KY_THAY_DOI.csv</button>
+        <button class="btn secondary" id="btn-dl-gone">⬇ Tải SKU_HET_HANG.csv</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-restart">Bắt đầu lại từ đầu</button>
+        <button class="btn" id="btn-dl-all">⬇ Tải tất cả file</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="tool-footer">Hero SKU data generation — bản Region × U/R</footer>
+</div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/distributors.js"></script>
+<script src="js/state.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/generator.js"></script>
+<script src="js/exporter.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
