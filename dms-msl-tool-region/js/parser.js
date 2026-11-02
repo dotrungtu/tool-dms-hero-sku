@@ -111,13 +111,14 @@ function validateCols(rows, required){
   return required.filter(c => !cols.includes(c)).map(c=>`Thieu cot "${c}"`);
 }
 
-/* Moi to hop Region x OTD L4 x Segment x U/R cua HERO NEW la mot danh sach.
-   (HERO NEW co san cot "Subset" = Region_OTD L4_Segment_U/R, khop 100%.) */
+/* Moi to hop Region x Kenh x Segment x U/R cua HERO NEW la mot danh sach.
+   Kenh lay cot OTD L3 (cung bo ma voi OutletTypeDetail cua ban cu); cac dong
+   OTD L4 khac nhau cua cung mot kenh duoc gop SKU Groups vao chung danh sach. */
 function buildSubsets(heroRows){
   const map = new Map();
   for(const r of heroRows){
     const region = s(pick(r,'Region'));
-    const otd    = s(pick(r,'OTD L4'));
+    const otd    = s(pick(r,'OTD L3'));
     const seg    = s(pick(r,'Segment'));
     const ur     = s(pick(r,'U/R')).toUpperCase();
     const skuGroup = s(pick(r,'SKU Groups'));

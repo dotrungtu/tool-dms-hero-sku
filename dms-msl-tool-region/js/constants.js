@@ -2,7 +2,8 @@
 /* =========================================================================
    constants.js  (ban Region x U/R)
    Bang tra cuu nghiep vu. Ban nay danh cho template HERO NEW moi:
-     - Khong con cot Area, danh sach chia theo Region x OTD L4 x Segment x U/R
+     - Khong con cot Area, danh sach chia theo Region x Kenh x Segment x U/R
+       (kenh = cot OTD L3, giong cot OutletTypeDetail cua ban cu)
      - Dong cap G trong MSL_CUSTASSIGN lay node cua Region (VD: VN1NR1)
      - Them cap gan U (Urban/Rural/Highland), MSL_CONDITION co 3 dong H/R/U
    Mau tham chieu: 260211_N1_CHTL_A_HL
@@ -59,7 +60,7 @@ const AREA_TO_DIST_CODE = {
   RR01:'VN1NR2A08', RR02:'VN1NR2A09', RR03:'VN1NR2A10', RR04:'VN1NR2A11'
 };
 
-/* Kenh (cot OTD L4 cua HERO NEW): giong ban cu, moi loai cua hang chi dung
+/* Kenh (cot OTD L3 cua HERO NEW): giu nguyen ban cu, moi loai cua hang chi dung
    MOT cap trong MSL_CUSTASSIGN:
      '3' -> dong cap 3, Assignment Code = 'TTON' + ma kenh  (da bao gom cap 4)
      '4' -> dong cap 4, Assignment Code = chinh ma kenh     (VD: CHTL trong file mau)
@@ -117,7 +118,7 @@ const INVT_RULES = {
 };
 
 const REQUIRED_COLS = {
-  hero: ['Region','OTD L4','Segment','U/R','SKU Groups'],
+  hero: ['Region','OTD L3','Segment','U/R','SKU Groups'],
   product: ['Item Code','SKU Groups'],
   stock: ['GroupName','PRD_CD','AVAILABLE_STK'],
   invt: ['Distributor Code','Warehouse Code','Product Code','Status Code','Stock Available'],

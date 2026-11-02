@@ -254,7 +254,7 @@ function renderReport(){
      (Status = A, Selling Type = 1, Parent Product Code trống), trong đó
      <b>${rep.newSkuCount.toLocaleString('vi-VN')}</b> mã là SKU mới (New SKU Ind = Y) — luôn được giữ lại kể cả khi tồn kho = 0.`);
 
-  const L = {region:'Region',otd:'Kênh (OTD L4)',seg:'Phân khúc',ur:'U/R',mslCode:'MSL Code',itemCode:'Item Code',
+  const L = {region:'Region',otd:'Kênh',seg:'Phân khúc',ur:'U/R',mslCode:'MSL Code',itemCode:'Item Code',
              itemName:'Tên hàng',avail:'Tồn khả dụng (cả Region)',reason:'Lý do',skuCount:'Số SKU',
              skuGroup:'SKU Group',lists:'Số danh sách',regionCount:'Số Region',
              candidates:'Tổng SKU',cutByPinfo:'Loại theo PRODUCT_INFO',cutByStock:'Loại vì hết tồn'};

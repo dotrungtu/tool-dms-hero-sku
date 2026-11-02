@@ -5,7 +5,7 @@
      - computeTargetLists()  : tinh ra danh sach SKU "dung ra phai co" hom nay
      - generate()            : che do TAO MOI dau thang -> 4 file day du
      - generateUpdate()      : che do CAP NHAT giua thang -> file bo sung
-   Moi danh sach = mot to hop Region x OTD L4 x Segment x U/R cua HERO NEW.
+   Moi danh sach = mot to hop Region x Kenh (OTD L3) x Segment x U/R cua HERO NEW.
    ========================================================================= */
 
 function pad2(x){ return String(x).padStart(2,'0'); }
