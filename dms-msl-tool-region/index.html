@@ -46,12 +46,6 @@
     <div class="card">
       <h2>Bước 1 — Tải lên các file dữ liệu</h2>
       <p class="muted">Kéo-thả hoặc bấm vào từng ô để chọn file. Công cụ sẽ tự kiểm tra file có đúng định dạng hay không.</p>
-      <div class="hint">
-        <b>Bản này dành cho template HERO NEW mới:</b> danh sách chia theo <b>Region × OTD L4 × Segment × U/R</b>
-        (không còn cột Area). Dòng G trong MSL_CUSTASSIGN lấy <b>node của Region</b>, có thêm cấp gán <b>U</b>
-        (Urban / Rural / Highland). Mã dạng <code>260211_N1_CHTL_A_HL</code>.
-        File HERO NEW cần các cột: <code>Region</code>, <code>OTD L4</code>, <code>Segment</code>, <code>U/R</code>, <code>SKU Groups</code>.
-      </div>
 
       <h3>Dữ liệu nguồn từ Biz Team</h3>
       <div class="dropzones">
@@ -84,13 +78,12 @@
       <div class="hint">
         <b>Tồn kho</b> lấy từ <b>INVT_MASTER.csv</b> — file xuất được từ hệ thống. Công cụ tự lọc
         <b>Status Code = A</b>, chỉ tính kho <b>MAIN_WHS / MAIN_WHS2 / KHOCUAHANG</b>, bỏ NPP đã ngưng kinh doanh
-        và khử dòng trùng lặp. Mã NPP được tra sang Region bằng bảng có sẵn trong công cụ, rồi
-        <b>cộng tồn của mọi NPP trong cùng Region</b>.
+        và khử dòng trùng lặp. Mã NPP được tra sang Region bằng bảng có sẵn trong công cụ.
       </div>
 
       <details class="collapsible">
         <summary>Dùng Stock Area.xlsx thay thế</summary>
-        <p class="muted">Cột GroupName (Area) được đổi sang Region rồi cộng dồn. Nếu tải cả hai, công cụ ưu tiên INVT_MASTER.csv.</p>
+        <p class="muted">Nếu tải cả hai, công cụ ưu tiên INVT_MASTER.csv.</p>
         <div class="dropzones">
           <div class="dropzone" id="zone-stock">
             <div class="icon">🗄️</div>
@@ -160,13 +153,6 @@
   <section class="screen" id="screen-params">
     <div class="card">
       <h2 id="params-title">Bước 2 — Thiết lập cho đợt tạo file lần này</h2>
-      <div id="cfg-warning" class="hint warn" style="display:none"></div>
-      <details class="collapsible" open>
-        <summary>Cấu hình Region / U/R đang dùng</summary>
-        <p class="muted">Viết tắt dùng để ghép mã MSL; node G và mã U ghi vào MSL_CUSTASSIGN.
-          Region / giá trị U/R mới chưa có trong bảng sẽ được hỏi ở Bước 3.</p>
-        <div id="cfg-table"></div>
-      </details>
 
       <!-- Chế độ tạo mới -->
       <div data-only-mode="create">
@@ -188,9 +174,8 @@
         </div>
 
         <h3>Cách xử lý sản phẩm hết tồn kho</h3>
-        <p class="muted">Tồn kho cộng dồn theo từng <b>Region</b> (mọi NPP thuộc Region), lấy từ cột Stock Available
-          trong INVT_MASTER.csv (hoặc cột AVAILABLE_STK nếu dùng Stock Area.xlsx). SKU còn hàng ở bất kỳ NPP nào
-          trong Region thì được giữ cho danh sách của Region đó.</p>
+        <p class="muted">Tồn kho cộng dồn theo từng Region, lấy từ cột Stock Available trong INVT_MASTER.csv
+          (hoặc cột AVAILABLE_STK nếu dùng Stock Area.xlsx).</p>
         <div class="radio-card-group">
           <label class="radio-card">
             <input type="radio" name="stock-mode" value="onlyInStock" checked>
@@ -203,7 +188,7 @@
             <input type="radio" name="stock-mode" value="includeAll">
             <span>
               <span class="opt-title">Giữ lại cả SKU có tồn kho = 0</span>
-              <span class="opt-sub">Chỉ giữ khi Region <b>có kinh doanh</b> mặt hàng đó nhưng đang tạm hết
+              <span class="opt-sub">Chỉ giữ khi NPP <b>có kinh doanh</b> mặt hàng đó nhưng đang tạm hết
                 (có dòng tồn kho ghi 0).</span>
             </span>
           </label>
@@ -245,17 +230,15 @@
       </div>
 
       <div class="gap-section" id="sec-regions">
-        <h3>① Region chưa có cấu hình (viết tắt trong mã, node G trong CUSTASSIGN)</h3>
-        <p class="muted">Cần nhập đủ viết tắt và node G. Bỏ trống hoặc tick &laquo;Bỏ qua&raquo; thì các danh sách của Region đó không được tạo.</p>
+        <h3>① Region chưa có viết tắt / node G</h3>
         <div id="gap-regions"></div>
       </div>
       <div class="gap-section" id="sec-urs">
-        <h3>② Giá trị U/R chưa có cấu hình (viết tắt trong mã, mã cấp U trong CUSTASSIGN)</h3>
-        <p class="muted">Cần nhập đủ viết tắt và mã U. Bỏ trống hoặc tick &laquo;Bỏ qua&raquo; thì các danh sách mang giá trị đó không được tạo.</p>
+        <h3>② U/R chưa có viết tắt / mã U</h3>
         <div id="gap-urs"></div>
       </div>
       <div class="gap-section" id="sec-otd">
-        <h3>③ Loại cửa hàng (OTD L4) chưa rõ cách gán nhóm khách hàng</h3>
+        <h3>③ Loại cửa hàng chưa rõ cách gán nhóm khách hàng</h3>
         <div id="gap-otd"></div>
       </div>
       <div class="gap-section" id="sec-sku">
@@ -281,7 +264,6 @@
     <!-- Báo cáo chế độ TẠO MỚI -->
     <div class="card" data-only-mode="create">
       <h2>Bước 4 — Báo cáo tổng hợp trước khi xuất file</h2>
-      <div id="cfg-warning-report" class="hint warn" style="display:none"></div>
       <div id="report-mode-banner" class="hint ok"></div>
       <div id="merge-applied-banner" class="hint ok" style="display:none"></div>
       <div id="length-check" class="hint ok"></div>
@@ -373,7 +355,6 @@
     <!-- Báo cáo chế độ CẬP NHẬT -->
     <div class="card" data-only-mode="update" style="display:none">
       <h2>Bước 4 — Thay đổi phát hiện được hôm nay</h2>
-      <div id="cfg-warning-update" class="hint warn" style="display:none"></div>
       <div id="upd-banner" class="hint ok"></div>
 
       <div class="summary-grid">

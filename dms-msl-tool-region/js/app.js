@@ -61,15 +61,12 @@ function initParamsScreen(){
          <b>${state.basePrdRows.length.toLocaleString('vi-VN')}</b> dòng SKU đang có trên DMS.
          ${merged ? `<br>Trong đó <b>${merged.toLocaleString('vi-VN')}</b> mã gộp (một mã áp cho nhiều tổ hợp Region × Kênh × Phân khúc × U/R)
            — SKU mới sẽ được đưa vào đúng mã gộp, không tạo lại danh sách lẻ.` : ''}
-         ${badG.length ? `<br><b>Lưu ý:</b> ${badG.length} mã có dòng cấp G / cấp U mang mã không tra được ra Region / U/R
-           (VD: <code>${escapeHtml(badG[0])}</code>) — công cụ không biết các mã này áp cho tổ hợp nào,
-           tổ hợp của chúng có thể bị coi là danh sách mới.` : ''}
+         ${badG.length ? `<br><b>Lưu ý:</b> ${badG.length} mã có dòng cấp G / cấp U không tra được ra Region / U/R
+           (VD: <code>${escapeHtml(badG[0])}</code>) — tổ hợp của các mã này có thể bị coi là danh sách mới.` : ''}
          ${noU.length ? `<br><b>Lưu ý:</b> ${noU.length} mã không có dòng cấp U (VD: <code>${escapeHtml(noU[0])}</code>)
-           — thường là danh sách tạo theo mẫu cũ (theo Area). Đợt theo Area hãy cập nhật bằng công cụ bản cũ.` : ''}`
+           — danh sách theo Area, cập nhật bằng tool cũ.` : ''}`
       : '<b>Không đọc được mã đợt</b> từ file MSL_INFO.csv. Kiểm tra lại xem có đúng file đã upload lần trước không.');
     if(el) el.className = 'hint ' + (!info.prefix ? 'err' : (badG.length || noU.length ? 'warn' : 'ok'));
-    state.datePrefix = info.prefix;
-    renderConfigPanel();
     return;
   }
 
@@ -78,8 +75,6 @@ function initParamsScreen(){
   setValue('inp-prefix', todayPrefix());
   setValue('inp-start',  localIsoDate(today));
   setValue('inp-end',    localIsoDate(end));
-  state.datePrefix = todayPrefix();
-  renderConfigPanel();
 }
 
 function goFromParamsToGaps(){
@@ -214,10 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   on('btn-params-back', 'click', () => showStep('upload'));
-  on('inp-prefix', 'input', () => {          // cap nhat vi du ma trong bang cau hinh
-    const v = getValue('inp-prefix').trim();
-    if(/^\d{6}$/.test(v)){ state.datePrefix = v; renderConfigPanel(); }
-  });
   on('btn-params-next', 'click', goFromParamsToGaps);
 
   on('btn-gaps-back', 'click', () => showStep('params'));

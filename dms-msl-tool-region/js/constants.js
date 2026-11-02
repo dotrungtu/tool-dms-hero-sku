@@ -39,10 +39,6 @@ const UR_TYPES = {
   'HIGHLAND': {abbr:'HL', code:'3'}
 };
 
-/* Cac gia tri cau hinh o tren CHUA duoc nguoi dung xac nhan.
-   Cong cu hien canh bao o Buoc 2 va Buoc 4 cho toi khi danh sach nay rong.
-   Khi da chot: sua gia tri trong REGIONS / UR_TYPES roi xoa dong tuong ung. */
-const UNCONFIRMED_CONFIG = [];   // 02/11/2026: nguoi dung da chot het
 
 /* Area -> node NPP cap Area. Ban nay khong gan theo Area nua, chi dung bang
    nay de tra Area cua file Stock Area.xlsx ra Region khi Area khong co trong

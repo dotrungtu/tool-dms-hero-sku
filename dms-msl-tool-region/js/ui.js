@@ -221,40 +221,6 @@ function collectGapInputs(){
   saveOverrides();
 }
 
-/* ----- Bang cau hinh Region / U/R dang dung + canh bao gia tri chua chot ----- */
-function renderConfigPanel(){
-  const regions = Object.entries(allRegionConfigs()).sort((a,b) => a[0].localeCompare(b[0]));
-  const urs = Object.entries(allUrConfigs()).sort((a,b) => a[0].localeCompare(b[0]));
-  const ex = Object.keys(REGIONS)[0], exUr = 'HIGHLAND';
-  const sample = REGIONS[ex] && UR_TYPES[exUr]
-    ? subsetCode(state.datePrefix || todayPrefix(), ex, 'CHTL', 'A', exUr) : '';
-
-  let html = `<div class="table-scroll"><table><thead><tr>
-      <th>Region (HERO NEW)</th><th>Viết tắt trong mã</th><th>Node G (cấp NPP)</th><th>Tên Region trong bảng NPP</th>
-    </tr></thead><tbody>${regions.map(([g,c]) => `<tr><td><b>${escapeHtml(g)}</b>${REGIONS[g] ? '' : ' <span class="badge amber">nhập tay</span>'}</td>
-      <td><code>${escapeHtml(c.abbr)}</code></td><td><code>${escapeHtml(c.node)}</code></td><td>${escapeHtml(c.stockRegion||g)}</td></tr>`).join('')}
-    </tbody></table></div>
-    <div class="table-scroll" style="margin-top:8px"><table><thead><tr>
-      <th>U/R (HERO NEW)</th><th>Viết tắt trong mã</th><th>Mã cấp U (CUSTASSIGN)</th>
-    </tr></thead><tbody>${urs.map(([u,c]) => `<tr><td><b>${escapeHtml(u)}</b>${UR_TYPES[u] ? '' : ' <span class="badge amber">nhập tay</span>'}</td>
-      <td><code>${escapeHtml(c.abbr)}</code></td><td><code>${escapeHtml(c.code)}</code></td></tr>`).join('')}
-    </tbody></table></div>`;
-  const l3 = Object.keys(OTD_LEVEL).filter(o => OTD_LEVEL[o] === '3').sort();
-  html += `<p class="muted">Kênh gán <b>cấp 3</b> (<code>TTON</code> + mã): ${l3.map(o => `<code>${escapeHtml(o)}</code>`).join(' ')}.
-    Các kênh khác trong bảng gán <b>cấp 4</b> bằng chính mã kênh; mã kênh mới sẽ được hỏi ở Bước 3.</p>`;
-  if(sample) html += `<p class="muted">Ví dụ mã sinh ra: <code>${escapeHtml(sample)}</code>
-    — mô tả: <code>${escapeHtml(mslDescription(ex, 'CHTL', 'A', exUr))}</code></p>`;
-  setHtml('cfg-table', html);
-
-  const warn = UNCONFIRMED_CONFIG.length
-    ? `<b>Cấu hình chưa được xác nhận — kiểm tra trước khi upload lên DMS:</b><br>• ${UNCONFIRMED_CONFIG.map(escapeHtml).join('<br>• ')}`
-    : '';
-  ['cfg-warning', 'cfg-warning-report', 'cfg-warning-update'].forEach(id => {
-    show(id, !!warn);
-    setHtml(id, warn);
-  });
-}
-
 /* ----- Man hinh 4: bao cao ----- */
 
 function renderReport(){
@@ -341,7 +307,6 @@ function renderReport(){
   setCount('cnt-byregion',   rep.byRegion.length);
   setCount('cnt-merge',      rep.merge.totalGroups);
 
-  renderConfigPanel();
   renderDownloadCards(r);
 }
 
@@ -354,17 +319,17 @@ function stockSourceHtml(){
        ${st.notActive.toLocaleString('vi-VN')} dòng Status ≠ A,
        ${st.otherWarehouse.toLocaleString('vi-VN')} dòng kho không tính,
        ${st.inactiveDist.toLocaleString('vi-VN')} dòng của NPP đã ngưng kinh doanh →
-       còn <b>${st.used.toLocaleString('vi-VN')}</b> dòng được dùng, cộng dồn theo Region.`;
+       còn <b>${st.used.toLocaleString('vi-VN')}</b> dòng được dùng.`;
     if(st.unknownRegion){
-      html += ` <b>${st.unknownRegion.toLocaleString('vi-VN')}</b> dòng bị bỏ vì Region của NPP không khớp Region nào
+      html += ` Bỏ ${st.unknownRegion.toLocaleString('vi-VN')} dòng của NPP có Region không khớp HERO NEW
         (${(st.unknownRegionNames||[]).map(escapeHtml).join(', ')}).`;
     }
     return html;
   }
   const st = state.stockAreaStats || {unknownAreas:[], unknownAreaRows:0};
-  let html = '<b>Nguồn tồn kho: Stock Area.xlsx</b> — Area được đổi sang Region rồi cộng dồn tồn khả dụng.';
+  let html = '<b>Nguồn tồn kho: Stock Area.xlsx</b> — file query trực tiếp từ database.';
   if(st.unknownAreas.length){
-    html += ` <b>${st.unknownAreaRows.toLocaleString('vi-VN')}</b> dòng bị bỏ vì Area không tra được ra Region
+    html += ` Bỏ ${st.unknownAreaRows.toLocaleString('vi-VN')} dòng có Area không tra được ra Region
       (${st.unknownAreas.slice(0,10).map(escapeHtml).join(', ')}${st.unknownAreas.length > 10 ? '…' : ''}).`;
   }
   return html;
@@ -659,16 +624,15 @@ function renderUpdateReport(){
   }
   if(rep.unknownGCodes.length){
     warns.push(`<b>${rep.unknownGCodes.length}</b> mã có dòng cấp G mang node không tra được ra Region
-      (VD: <code>${escapeHtml(rep.unknownGCodes[0])}</code>) — phạm vi của các mã này có thể bị đọc thiếu.`);
+      (VD: <code>${escapeHtml(rep.unknownGCodes[0])}</code>).`);
   }
   if(rep.unknownUCodes.length){
     warns.push(`<b>${rep.unknownUCodes.length}</b> mã có dòng cấp U mang mã không tra được ra U/R
-      (VD: <code>${escapeHtml(rep.unknownUCodes[0])}</code>) — kiểm tra lại mã U trong cấu hình.`);
+      (VD: <code>${escapeHtml(rep.unknownUCodes[0])}</code>).`);
   }
   if(rep.noUCodes.length){
-    warns.push(`<b>${rep.noUCodes.length}</b> mã không có dòng cấp U nào
-      (VD: <code>${escapeHtml(rep.noUCodes[0])}</code>) — thường là danh sách tạo theo mẫu cũ (theo Area).
-      Bản này không đối chiếu được các mã đó; đợt theo Area hãy cập nhật bằng công cụ bản cũ.`);
+    warns.push(`<b>${rep.noUCodes.length}</b> mã không có dòng cấp U
+      (VD: <code>${escapeHtml(rep.noUCodes[0])}</code>) — danh sách theo Area, cập nhật bằng tool cũ.`);
   }
   show('upd-unmatched', warns.length > 0);
   setHtml('upd-unmatched', warns.join('<br>'));
@@ -707,6 +671,5 @@ function renderUpdateReport(){
     {region:'Region',itemCode:'Item Code',avail:'Tồn khả dụng (cả Region)',count:'Số danh sách chứa SKU này'},
     'Không có SKU nào trong DMS bị hết hàng.', 300);
 
-  renderConfigPanel();
   renderDownloadCards(state.result);
 }
