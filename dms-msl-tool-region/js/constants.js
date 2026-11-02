@@ -29,7 +29,7 @@ const REGIONS = {
 /* Gia tri cot "U/R" trong HERO NEW ->
      abbr : viet tat dung trong ma MSL
      code : Assignment Code cua dong cap U trong CUSTASSIGN
-   HIGHLAND = HL / 03 lay tu file mau. */
+   HIGHLAND = HL / 03 lay tu file mau. Viet tat UB / RR da duoc nguoi dung xac nhan. */
 const UR_TYPES = {
   'URBAN':    {abbr:'UB', code:'01'},
   'RURAL':    {abbr:'RR', code:'02'},
@@ -41,8 +41,7 @@ const UR_TYPES = {
    Khi da chot: sua gia tri trong REGIONS / UR_TYPES roi xoa dong tuong ung. */
 const UNCONFIRMED_CONFIG = [
   'Mã U của URBAN (01) và RURAL (02) — mới biết chắc HIGHLAND = 03',
-  'Viết tắt Region trong mã: North 2 = N2, DN = DN, HCMC = HC, HCMP = HP, MK = MK — mới biết chắc North 1 = N1',
-  'Viết tắt U/R trong mã: URBAN = UB, RURAL = RR — mới biết chắc HIGHLAND = HL'
+  'Viết tắt Region trong mã: North 2 = N2, DN = DN, HCMC = HC, HCMP = HP, MK = MK — mới biết chắc North 1 = N1'
 ];
 
 /* Area -> node NPP cap Area. Ban nay khong gan theo Area nua, chi dung bang
