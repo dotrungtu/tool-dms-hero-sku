@@ -144,13 +144,13 @@ const OUTPUT_SPECS = [
    - INFO chua ca danh sach moi lan danh sach cu co Total thay doi. --- */
 const UPDATE_OUTPUT_SPECS = [
   {file:'MSL_INFO_UPDATE.csv', key:'infoRows', headers:OUTPUT_SPECS[0].headers,
-   note:'Danh sách mới phát sinh + danh sách đang chạy có Total thay đổi'},
+   note:'Danh sách mới + danh sách đổi Total'},
   {file:'MSL_CONDITION_NEW.csv', key:'condRows', headers:OUTPUT_SPECS[1].headers,
-   note:'CHỈ danh sách mới phát sinh — không upload cho danh sách đang chạy'},
+   note:'Chỉ danh sách mới'},
   {file:'MSL_CUSTASSIGN_NEW.CSV', key:'custRows', headers:OUTPUT_SPECS[2].headers,
-   note:'CHỈ danh sách mới phát sinh — không upload cho danh sách đang chạy'},
+   note:'Chỉ danh sách mới'},
   {file:'MSL_PRDASSIGN_ADD.csv', key:'prdRows', headers:OUTPUT_SPECS[3].headers,
-   note:'Chỉ các SKU cần bổ sung thêm'}
+   note:'Chỉ SKU cần thêm'}
 ];
 
 /* --- Bo file moc sau lan cap nhat: file moc cu + phan bo sung ---

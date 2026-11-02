@@ -55,17 +55,13 @@ function initParamsScreen(){
     const badG = [...cust].filter(([,c]) => c.unknownG.size || c.unknownU.size).map(([code]) => code);
     const noU  = [...cust].filter(([,c]) => !c.urs.size && !c.unknownU.size).map(([code]) => code);
     const el = setHtml('upd-detected', info.prefix
-      ? `Đã nhận diện đợt đang chạy: <b><code>${escapeHtml(info.prefix)}</code></b> &nbsp;|&nbsp;
+      ? `Đợt <b><code>${escapeHtml(info.prefix)}</code></b> &nbsp;|&nbsp;
          Hiệu lực <b>${escapeHtml(info.startDate)}</b> → <b>${escapeHtml(info.endDate)}</b> &nbsp;|&nbsp;
-         <b>${prd.size.toLocaleString('vi-VN')}</b> danh sách với
-         <b>${state.basePrdRows.length.toLocaleString('vi-VN')}</b> dòng SKU đang có trên DMS.
-         ${merged ? `<br>Trong đó <b>${merged.toLocaleString('vi-VN')}</b> mã gộp (một mã áp cho nhiều tổ hợp Region × Kênh × Phân khúc × U/R)
-           — SKU mới sẽ được đưa vào đúng mã gộp, không tạo lại danh sách lẻ.` : ''}
-         ${badG.length ? `<br><b>Lưu ý:</b> ${badG.length} mã có dòng cấp G / cấp U không tra được ra Region / U/R
-           (VD: <code>${escapeHtml(badG[0])}</code>) — tổ hợp của các mã này có thể bị coi là danh sách mới.` : ''}
-         ${noU.length ? `<br><b>Lưu ý:</b> ${noU.length} mã không có dòng cấp U (VD: <code>${escapeHtml(noU[0])}</code>)
-           — danh sách theo Area, cập nhật bằng tool cũ.` : ''}`
-      : '<b>Không đọc được mã đợt</b> từ file MSL_INFO.csv. Kiểm tra lại xem có đúng file đã upload lần trước không.');
+         ${prd.size.toLocaleString('vi-VN')} danh sách, ${state.basePrdRows.length.toLocaleString('vi-VN')} dòng SKU
+         ${merged ? `, ${merged.toLocaleString('vi-VN')} mã gộp` : ''}
+         ${badG.length ? `<br>${badG.length} mã có node G / mã U không tra được (<code>${escapeHtml(badG[0])}</code>).` : ''}
+         ${noU.length ? `<br>${noU.length} mã không có dòng cấp U (<code>${escapeHtml(noU[0])}</code>), là danh sách theo Area.` : ''}`
+      : 'Không đọc được mã đợt từ MSL_INFO.csv.');
     if(el) el.className = 'hint ' + (!info.prefix ? 'err' : (badG.length || noU.length ? 'warn' : 'ok'));
     return;
   }
@@ -86,18 +82,18 @@ function goFromParamsToGaps(){
     state.stockMode = modeEl ? modeEl.value : 'onlyInStock';
 
     if(!/^\d{6}$/.test(state.datePrefix)){
-      alert('Tiền tố ngày phải là 6 chữ số (VD: 260801).'); return;
+      alert('Tiền tố ngày phải gồm 6 chữ số.'); return;
     }
     if(!state.startDate || !state.endDate){
-      alert('Vui lòng chọn Ngày bắt đầu và Ngày kết thúc.'); return;
+      alert('Chưa chọn Start Date / End Date.'); return;
     }
     if(state.endDate < state.startDate){
-      alert('Ngày kết thúc phải sau Ngày bắt đầu.'); return;
+      alert('End Date phải sau Start Date.'); return;
     }
   } else {
     const info = buildBaselineInfo(state.baseInfoRows);
     if(!info.prefix){
-      alert('Không đọc được mã đợt từ file MSL_INFO.csv đã upload lần trước.'); return;
+      alert('Không đọc được mã đợt từ MSL_INFO.csv.'); return;
     }
     state.datePrefix = info.prefix;
     state.startDate  = info.startDate;
@@ -256,16 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const tooLong = picks.filter(i => (names[i] || groups[i].mergedCode).length > MAX_CODE_LEN
                                    || (descs[i] || groups[i].mergedDescription).length > MAX_DESC_LEN);
     if(tooLong.length){
-      alert(`${tooLong.length} nhóm có mã hoặc mô tả vượt giới hạn DMS `
-          + `(mã tối đa ${MAX_CODE_LEN}, mô tả tối đa ${MAX_DESC_LEN} ký tự). Vui lòng rút ngắn trước khi gộp.`);
+      alert(`${tooLong.length} nhóm có mã quá ${MAX_CODE_LEN} ký tự hoặc mô tả quá ${MAX_DESC_LEN} ký tự.`);
       return;
     }
 
     const dupe = findDuplicateNames(names, picks);
-    if(dupe){ alert('Mã sau gộp bị trùng nhau: ' + dupe + '\nVui lòng đặt tên khác.'); return; }
+    if(dupe){ alert('Mã sau gộp bị trùng: ' + dupe); return; }
 
     const total = picks.reduce((s,i) => s + groups[i].savings, 0);
-    if(!confirm(`Gộp ${picks.length} nhóm, bớt ${total} mã MSL?\n\nThao tác này áp dụng vào cả 4 file. Bạn có thể hoàn tác sau.`)) return;
+    if(!confirm(`Gộp ${picks.length} nhóm, bớt ${total} mã MSL?`)) return;
 
     state.result = applyMerges(picks, names, descs);
     renderReport();
@@ -287,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   on('btn-dl-all',    'click', () => downloadAllOutputs(state.result));
 
   on('btn-restart', 'click', () => {
-    if(confirm('Bắt đầu lại từ đầu? Các file đã tải lên sẽ bị xoá (thông tin bổ sung vẫn được lưu).')){
+    if(confirm('Bắt đầu lại từ đầu?')){
       location.reload();
     }
   });

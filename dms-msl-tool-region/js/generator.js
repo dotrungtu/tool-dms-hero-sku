@@ -109,8 +109,8 @@ function computeTargetLists(datePrefix, stockMode){
     if(!resolveRegion(region) || !resolveUr(ur)){
       emptySubsets.push(Object.assign({mslCode:'', candidates:0, cutByPinfo:0, cutByStock:0,
         reason: !resolveRegion(region)
-          ? `Region ${region} chưa có cấu hình (viết tắt / node G) — không tạo được danh sách`
-          : `U/R ${ur} chưa có cấu hình (viết tắt / mã U) — không tạo được danh sách`}, dims));
+          ? `Region ${region} chưa có viết tắt / node G`
+          : `U/R ${ur} chưa có viết tắt / mã U`}, dims));
       continue;
     }
 
@@ -119,7 +119,7 @@ function computeTargetLists(datePrefix, stockMode){
       const other = codeOwner.get(mslCode);
       codeCollisions.push({mslCode, first: other, second: key});
       emptySubsets.push(Object.assign({mslCode, candidates:0, cutByPinfo:0, cutByStock:0,
-        reason:`Trùng mã với tổ hợp ${other.split('|').join(' / ')} — kiểm tra lại viết tắt Region / U/R`}, dims));
+        reason:`Trùng mã với tổ hợp ${other.split('|').join(' / ')}`}, dims));
       continue;
     }
     codeOwner.set(mslCode, key);
@@ -174,15 +174,15 @@ function computeTargetLists(datePrefix, stockMode){
       const hasStockRow = avail !== undefined;
       const reason = !hasStockData
         ? `Region ${region} không có dữ liệu tồn kho trong file ${stockSourceName()}`
-        : (!hasStockRow ? `Không có dòng tồn kho cho mã này ở Region ${region} — không NPP nào trong Region kinh doanh mặt hàng này`
-                        : `Tồn khả dụng cộng cả Region ${region} = ${avail}`);
+        : (!hasStockRow ? `Không có dòng tồn kho ở Region ${region}`
+                        : `Tồn khả dụng ở Region ${region} = ${avail}`);
       noStock.push(Object.assign({mslCode, itemCode, itemName,
                     avail: avail || 0, isNewSku, hasStockRow, reason}, dims));
 
       if(isNewSku){
         items.push({itemCode, itemName});
         keptByNewSku.push(Object.assign({mslCode, itemCode, itemName,
-          reason:'New SKU Ind = Y — SKU mới ra mắt, giữ lại dù chưa có hàng'}, dims));
+          reason:'New SKU Ind = Y, giữ dù chưa có hàng'}, dims));
       } else if(stockMode === 'includeAll' && hasStockRow){
         items.push({itemCode, itemName});
       } else {
@@ -283,8 +283,8 @@ function findMergeableLists(lists){
       else if(otds.size > 1) { kind='channel'; kindLabel='Cùng Region + Phân khúc + U/R, chỉ khác Kênh'; }
       else                   { kind='region';  kindLabel='Cùng Kênh + Phân khúc + U/R, chỉ khác Region'; }
     }
-    else if(regions.size === 1){ kind='region-inner'; kindLabel='Cùng Region, khác từ 2 chiều trở lên — cân nhắc kỹ'; }
-    else { kind='mixed'; kindLabel='Khác nhiều chiều — cân nhắc kỹ'; }
+    else if(regions.size === 1){ kind='region-inner'; kindLabel='Cùng Region, khác từ 2 chiều'; }
+    else { kind='mixed'; kindLabel='Khác nhiều chiều'; }
 
     const preview = makeMergedUnit(members, state.datePrefix);
     groups.push({
@@ -649,7 +649,7 @@ function generateUpdate(){
     if(allBaseCodes.has(k)){               // ma cua to hop da duoc dung cho ma khac tren DMS
       manual.push({mslCode:k, region:list.region, otd:list.otd, seg:list.seg, ur:list.ur, mergedCode:from,
         addedItems: rest.map(it => it.itemCode).join(', '),
-        reason:`Mã ${k} đã có trên DMS nhưng còn áp cho tổ hợp khác — không thêm vào được, cũng không tách riêng được`});
+        reason:`Mã ${k} đã có trên DMS và còn áp cho tổ hợp khác`});
       continue;
     }
     newUnits.push({unit: Object.assign(makeUnit(list), {items: rest}), splitFrom: from});
@@ -684,7 +684,7 @@ function generateUpdate(){
       seg: scope.segs.join(', '), ur: scope.urs.join(', '),
       oldTotal, addedCount: items.length, newTotal,
       addedItems: items.map(it => it.itemCode).join(', '),
-      note: n > 1 ? `Mã gộp — áp cho ${n} tổ hợp` : ''});
+      note: n > 1 ? `Mã gộp, ${n} tổ hợp` : ''});
   }
 
   for(const {unit, splitFrom} of newUnits){
@@ -694,7 +694,7 @@ function generateUpdate(){
     unit.items.forEach(it => prdRows.push(buildPrdRow(unit.mslCode, it.itemCode)));
     newLists.push({mslCode: unit.mslCode, region: unit.regions[0], otd: unit.otds[0], seg: unit.segs[0],
       ur: unit.urs[0], skuCount: unit.items.length,
-      note: splitFrom ? `Tách từ mã gộp ${splitFrom} — chỉ chứa SKU mới, SKU cũ vẫn ở mã gộp` : ''});
+      note: splitFrom ? `Tách từ mã gộp ${splitFrom}, chỉ có SKU mới` : ''});
   }
 
   /* SKU dang nam trong DMS nhung hien da het hang o Region - chi bao cao, khong xoa duoc.

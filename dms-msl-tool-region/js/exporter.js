@@ -74,21 +74,21 @@ function buildChangeCsv(result){
   const rows = [];
 
   rep.newLists.forEach(r => rows.push({
-    'Loại thay đổi':'Danh sách MỚI phát sinh (cần upload đủ 4 file)',
+    'Loại thay đổi':'Danh sách mới (upload đủ 4 file)',
     'MSL Code':r.mslCode,'Region':r.region,'Kênh':r.otd,'Phân khúc':r.seg,'U/R':r.ur,
     'Số SKU cũ':0,'Số SKU thêm':r.skuCount,'Tổng SKU mới':r.skuCount,'Item Code được thêm':'',
     'Ghi chú':r.note
   }));
 
   rep.grownLists.forEach(r => rows.push({
-    'Loại thay đổi':'Danh sách đang chạy — bổ sung SKU',
+    'Loại thay đổi':'Danh sách đang chạy, thêm SKU',
     'MSL Code':r.mslCode,'Region':r.region,'Kênh':r.otd,'Phân khúc':r.seg,'U/R':r.ur,
     'Số SKU cũ':r.oldTotal,'Số SKU thêm':r.addedCount,'Tổng SKU mới':r.newTotal,
     'Item Code được thêm':r.addedItems,'Ghi chú':r.note
   }));
 
   rep.manual.forEach(r => rows.push({
-    'Loại thay đổi':'CẦN XỬ LÝ TAY — công cụ không xuất',
+    'Loại thay đổi':'Xử lý tay',
     'MSL Code':r.mslCode,'Region':r.region,'Kênh':r.otd,'Phân khúc':r.seg,'U/R':r.ur,
     'Số SKU cũ':'','Số SKU thêm':'','Tổng SKU mới':'',
     'Item Code được thêm':r.addedItems,'Ghi chú':r.reason
@@ -131,10 +131,10 @@ const DETAIL_EXPORTS = {
     headers: ['MSL Code', ...DIM_HEADERS, 'Item Code','Tên hàng','Tồn khả dụng (cả Region)','Kết quả','Lý do'],
     rows: rep => rep.noStock.map(r => Object.assign({'MSL Code':r.mslCode}, dimCols(r), {
       'Item Code':r.itemCode,'Tên hàng':r.itemName,'Tồn khả dụng (cả Region)':r.avail,
-      'Kết quả': r.isNewSku ? 'GIỮ LẠI (SKU mới)'
+      'Kết quả': r.isNewSku ? 'Giữ (SKU mới)'
                 : (rep.stockMode === 'includeAll' && r.hasStockRow
-                    ? 'GIỮ LẠI (tồn = 0 nhưng Region có kinh doanh)'
-                    : 'BỊ LOẠI'),
+                    ? 'Giữ (tồn = 0)'
+                    : 'Loại'),
       'Lý do':r.reason}))
   },
   newsku: {
@@ -188,7 +188,7 @@ function buildMergeCsv(result){
       'Nhóm': i+1,
       'Kiểu gộp': g.kindLabel,
       'MSL Code': code,
-      'Vai trò': j === 0 ? 'GIỮ LẠI (mã đại diện)' : 'Gộp vào mã đại diện',
+      'Vai trò': j === 0 ? 'Mã đại diện' : 'Gộp vào mã đại diện',
       'Số SKU chung': g.skuCount,
       'Số mã trong nhóm': g.codes.length,
       'Region trong nhóm': g.regions.join(' | '),
@@ -213,7 +213,7 @@ function buildReportCsv(result){
 
   // 1. SKU bi loai boi PRODUCT_INFO - ly do thuoc ve san pham, khong phu thuoc Region
   groupCount(rep.filteredOut, r => r.itemCode, r => ({
-    'Loại':'Bị loại theo PRODUCT_INFO (Status / Selling Type / Parent không hợp lệ)',
+    'Loại':'Loại theo PRODUCT_INFO',
     'Region':'(tất cả)', 'Item Code':r.itemCode, 'Tên hàng / SKU Group':r.itemName,
     'Tồn khả dụng':'', 'MSL Code':''
   })).sort((a,b)=>b['Số danh sách bị ảnh hưởng']-a['Số danh sách bị ảnh hưởng'])
@@ -221,12 +221,12 @@ function buildReportCsv(result){
 
   // 2. SKU ton kho = 0. SKU moi luon duoc giu lai nen tach rieng nhan.
   const labelFor = r => {
-    if(r.isNewSku) return 'Tồn kho = 0 nhưng LUÔN GIỮ LẠI (SKU mới)';
+    if(r.isNewSku) return 'Tồn = 0, giữ vì SKU mới';
     if(rep.stockMode === 'includeAll'){
-      return r.hasStockRow ? 'Tồn kho = 0 (vẫn giữ lại theo lựa chọn)'
-                           : 'Bị loại — không NPP nào trong Region kinh doanh mặt hàng này';
+      return r.hasStockRow ? 'Tồn = 0, giữ theo lựa chọn'
+                           : 'Loại, không có tồn kho ở Region';
     }
-    return 'Bị loại vì hết tồn kho';
+    return 'Loại vì hết tồn';
   };
   groupCount(rep.noStock, r => r.region+'|'+r.itemCode, r => ({
     'Loại': labelFor(r),
@@ -237,14 +237,14 @@ function buildReportCsv(result){
 
   // 3. SKU Group khong tra ra Item Code
   groupCount(rep.missingItemReport, r => r.skuGroup, r => ({
-    'Loại':'SKU Group không tìm được Item Code', 'Region':'(tất cả)', 'Item Code':'',
+    'Loại':'SKU Group không có Item Code', 'Region':'(tất cả)', 'Item Code':'',
     'Tên hàng / SKU Group':r.skuGroup, 'Tồn khả dụng':'', 'MSL Code':''
   })).sort((a,b)=>b['Số danh sách bị ảnh hưởng']-a['Số danh sách bị ảnh hưởng'])
     .forEach(r => rows.push(r));
 
   // 4. Danh sach MSL bi bo qua hoan toan - liet ke tung dong
   rep.emptySubsets.forEach(r => rows.push({
-    'Loại':'Danh sách bị bỏ qua (không còn SKU nào)', 'Region':r.region, 'Item Code':'',
+    'Loại':'Danh sách bị bỏ (không còn SKU)', 'Region':r.region, 'Item Code':'',
     'Tên hàng / SKU Group':`${r.otd} / ${r.seg} / ${r.ur}`, 'Tồn khả dụng':'',
     'Số danh sách bị ảnh hưởng':1, 'MSL Code':r.mslCode
   }));

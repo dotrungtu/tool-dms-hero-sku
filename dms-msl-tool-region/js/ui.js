@@ -112,7 +112,7 @@ function renderLimitedTable(containerId, rows, cols, labels, emptyMsg, limit){
   if(!rows.length){ el.innerHTML = `<p class="muted">${escapeHtml(emptyMsg)}</p>`; return; }
   el.innerHTML = tableHtml(rows.slice(0, limit), cols, labels);
   if(rows.length > limit){
-    el.innerHTML += `<p class="muted">... và ${(rows.length-limit).toLocaleString('vi-VN')} dòng khác (chỉ hiển thị ${limit} dòng đầu — tải file báo cáo để xem đầy đủ).</p>`;
+    el.innerHTML += `<p class="muted">... và ${(rows.length-limit).toLocaleString('vi-VN')} dòng khác (tải file để xem đủ).</p>`;
   }
 }
 
@@ -154,7 +154,6 @@ function renderGapsScreen(){
         <label class="chk"><input type="radio" name="otd-lv-${escapeHtml(o)}" data-otd-level="${escapeHtml(o)}" value="3"> Cấp 3 — <code>TTON${escapeHtml(o)}</code></label>
         <label class="chk"><input type="radio" name="otd-lv-${escapeHtml(o)}" data-otd-level="${escapeHtml(o)}" value="4" checked> Cấp 4 — <code>${escapeHtml(o)}</code></label>
       </div>
-      <span class="muted" style="font-size:11.5px">Không chắc? Giữ cấp 4.</span>
     </div>`).join(''));
 
   setHtml('gap-sku', state.missingSkuGroups.map(g => `
@@ -239,13 +238,11 @@ function renderReport(){
   let modeHtml;
   if(rep.stockMode === 'includeAll'){
     const kept = rep.noStock.filter(x => x.hasStockRow && !x.isNewSku).length;
-    modeHtml = `<b>Chế độ tồn kho: Giữ lại cả SKU tồn kho = 0.</b>
-      ${kept.toLocaleString('vi-VN')} dòng có tồn khả dụng = 0 nhưng NPP vẫn kinh doanh mặt hàng đó nên
-      <b>được giữ lại</b>. Riêng ${rep.noStockRowCut.toLocaleString('vi-VN')} dòng
-      <b>không có dòng tồn kho nào</b> ở cả Region (không NPP nào kinh doanh mặt hàng đó) thì <b>vẫn bị loại</b>.`;
+    modeHtml = `<b>Giữ cả SKU tồn = 0:</b> giữ ${kept.toLocaleString('vi-VN')} dòng tồn = 0,
+      loại ${rep.noStockRowCut.toLocaleString('vi-VN')} dòng không có tồn kho ở Region.`;
   } else {
-    modeHtml = `<b>Chế độ tồn kho: Chỉ lấy SKU còn hàng.</b>
-      ${rep.noStock.length.toLocaleString('vi-VN')} SKU có tồn kho = 0 <b>đã bị loại</b> khỏi file kết quả.`;
+    const cut = rep.noStock.filter(x => !x.isNewSku).length;
+    modeHtml = `<b>Chỉ lấy SKU còn hàng:</b> loại ${cut.toLocaleString('vi-VN')} dòng hết tồn.`;
   }
   const modeBanner = setHtml('report-mode-banner', modeHtml);
   if(modeBanner) modeBanner.className = 'hint ' + (rep.stockMode === 'includeAll' ? 'warn' : 'ok');
@@ -253,9 +250,8 @@ function renderReport(){
   setHtml('report-stock-source', stockSourceHtml());
 
   setHtml('report-pinfo-note',
-    `Đã áp dụng bộ lọc <b>PRODUCT_INFO.csv</b>: ${rep.validProductCount.toLocaleString('vi-VN')} mã sản phẩm hợp lệ
-     (Status = A, Selling Type = 1, Parent Product Code trống), trong đó
-     <b>${rep.newSkuCount.toLocaleString('vi-VN')}</b> mã là SKU mới (New SKU Ind = Y) — luôn được giữ lại kể cả khi tồn kho = 0.`);
+    `PRODUCT_INFO.csv: ${rep.validProductCount.toLocaleString('vi-VN')} mã hợp lệ,
+     ${rep.newSkuCount.toLocaleString('vi-VN')} SKU mới.`);
 
   const L = {region:'Region',otd:'Kênh',seg:'Phân khúc',ur:'U/R',mslCode:'MSL Code',itemCode:'Item Code',
              itemName:'Tên hàng',avail:'Tồn khả dụng (cả Region)',reason:'Lý do',skuCount:'Số SKU',
@@ -277,15 +273,15 @@ function renderReport(){
 
   renderLimitedTable('detail-newsku', rep.keptByNewSku,
     ['mslCode', ...D, 'itemCode','itemName','reason'], L,
-    'Không có SKU mới nào cần giữ lại.', 300);
+    'Không có SKU mới nào.', 300);
 
   renderLimitedTable('detail-filtered', rep.filteredOut,
     ['mslCode', ...D, 'itemCode','itemName','reason'], L,
-    'Không có SKU nào bị loại bởi bộ lọc PRODUCT_INFO.', 300);
+    'Không có SKU nào bị loại.', 300);
 
   renderLimitedTable('detail-missitem', rep.missingItemReport,
     [...D, 'skuGroup','reason'], L,
-    'Tất cả SKU Groups đều tìm được Item Code.', 300);
+    'Không có.', 300);
 
   renderLimitedTable('detail-empty', rep.emptySubsets,
     ['mslCode', ...D, 'candidates','cutByPinfo','cutByStock','reason'], L,
@@ -317,20 +313,17 @@ function renderReport(){
 function stockSourceHtml(){
   if(state.invtStats && stockSource() === 'invt'){
     const st = state.invtStats;
-    let html = `<b>Nguồn tồn kho: INVT_MASTER.csv</b> — ${st.total.toLocaleString('vi-VN')} dòng gốc →
-       bỏ ${st.duplicate.toLocaleString('vi-VN')} dòng trùng,
-       ${st.notActive.toLocaleString('vi-VN')} dòng Status ≠ A,
-       ${st.otherWarehouse.toLocaleString('vi-VN')} dòng kho không tính,
-       ${st.inactiveDist.toLocaleString('vi-VN')} dòng của NPP đã ngưng kinh doanh →
-       còn <b>${st.used.toLocaleString('vi-VN')}</b> dòng được dùng.`;
+    let html = `INVT_MASTER.csv: ${st.total.toLocaleString('vi-VN')} dòng, bỏ ${st.duplicate.toLocaleString('vi-VN')} trùng,
+       ${st.notActive.toLocaleString('vi-VN')} Status ≠ A, ${st.otherWarehouse.toLocaleString('vi-VN')} kho khác,
+       ${st.inactiveDist.toLocaleString('vi-VN')} NPP ngưng, dùng ${st.used.toLocaleString('vi-VN')} dòng.`;
     if(st.unknownRegion){
-      html += ` Bỏ ${st.unknownRegion.toLocaleString('vi-VN')} dòng của NPP có Region không khớp HERO NEW
+      html += ` Bỏ ${st.unknownRegion.toLocaleString('vi-VN')} dòng có Region không khớp HERO NEW
         (${(st.unknownRegionNames||[]).map(escapeHtml).join(', ')}).`;
     }
     return html;
   }
   const st = state.stockAreaStats || {unknownAreas:[], unknownAreaRows:0};
-  let html = '<b>Nguồn tồn kho: Stock Area.xlsx</b> — file query trực tiếp từ database.';
+  let html = 'Stock Area.xlsx.';
   if(st.unknownAreas.length){
     html += ` Bỏ ${st.unknownAreaRows.toLocaleString('vi-VN')} dòng có Area không tra được ra Region
       (${st.unknownAreas.slice(0,10).map(escapeHtml).join(', ')}${st.unknownAreas.length > 10 ? '…' : ''}).`;
@@ -353,20 +346,18 @@ function renderLengthCheck(){
   let cls, html;
   if(clashes.length){
     cls = 'hint err';
-    html = `<b>Trùng mã MSL!</b> ${clashes.length} tổ hợp sinh ra mã đã dùng cho tổ hợp khác
-      (VD: <code>${escapeHtml(clashes[0].mslCode)}</code>) nên đã bị bỏ qua — kiểm tra lại viết tắt Region / U/R.`;
+    html = `<b>Trùng mã:</b> bỏ ${clashes.length} tổ hợp trùng mã với tổ hợp khác
+      (<code>${escapeHtml(clashes[0].mslCode)}</code>).`;
   } else if(!badCode.length && !badDesc.length){
     const maxC = Math.max(0, ...rows.map(r => String(r['Must Sell List Code']).length));
     const maxD = Math.max(0, ...rows.map(r => String(r['Must Sell List Description']).length));
     cls = 'hint ok';
-    html = `<b>Độ dài trường hợp lệ.</b> Mã dài nhất ${maxC}/${MAX_CODE_LEN} ký tự,
-      mô tả dài nhất ${maxD}/${MAX_DESC_LEN} ký tự — nằm trong giới hạn DMS.`;
+    html = `Độ dài hợp lệ: mã dài nhất ${maxC}/${MAX_CODE_LEN}, mô tả dài nhất ${maxD}/${MAX_DESC_LEN}.`;
   } else {
     cls = 'hint err';
-    html = `<b>Vượt giới hạn DMS!</b>
-      ${badCode.length ? `${badCode.length} mã dài quá ${MAX_CODE_LEN} ký tự (VD: <code>${escapeHtml(badCode[0]['Must Sell List Code'])}</code>). ` : ''}
-      ${badDesc.length ? `${badDesc.length} mô tả dài quá ${MAX_DESC_LEN} ký tự. ` : ''}
-      Upload sẽ bị từ chối — hãy sửa trước khi tải file.`;
+    html = `<b>Vượt giới hạn DMS:</b>
+      ${badCode.length ? `${badCode.length} mã quá ${MAX_CODE_LEN} ký tự (<code>${escapeHtml(badCode[0]['Must Sell List Code'])}</code>). ` : ''}
+      ${badDesc.length ? `${badDesc.length} mô tả quá ${MAX_DESC_LEN} ký tự.` : ''}`;
   }
   const el = setHtml('length-check', html);
   if(el) el.className = cls;
@@ -377,10 +368,8 @@ function renderMergeAppliedBanner(){
   if(!applied || !applied.groupCount){ show('merge-applied-banner', false); return; }
   show('merge-applied-banner', true);
   setHtml('merge-applied-banner',
-    `<b>Đã gộp ${applied.groupCount.toLocaleString('vi-VN')} nhóm mã MSL.</b>
-     Bớt được ${applied.codesSaved.toLocaleString('vi-VN')} mã và
-     ${applied.prdRowsSaved.toLocaleString('vi-VN')} dòng PRDASSIGN.
-     Các mã gộp đã được áp dụng vào cả 4 file — <code>MSL_CUSTASSIGN</code> nhận đủ Kênh, Phân khúc, U/R và Region của cả nhóm.`);
+    `Đã gộp ${applied.groupCount.toLocaleString('vi-VN')} nhóm: bớt ${applied.codesSaved.toLocaleString('vi-VN')} mã,
+     ${applied.prdRowsSaved.toLocaleString('vi-VN')} dòng PRDASSIGN.`);
 }
 
 /* ----- Bang thong ke theo Region, kem thanh ty le con hang ----- */
@@ -413,17 +402,14 @@ function renderRegionTable(containerId, rows){
 
   const noData = rows.filter(r => !r.hasStockData);
   if(noData.length){
-    html += `<div class="hint err" style="margin-top:12px"><b>Thiếu dữ liệu tồn kho:</b>
-      ${noData.length} Region có trong HERO NEW nhưng <b>không có một dòng nào</b> trong file ${escapeHtml(stockSourceName())}
-      (${noData.map(r => escapeHtml(r.region)).join(', ')}).
-      Toàn bộ SKU của các Region này bị coi như hết hàng — kiểm tra lại file tồn kho, hoặc tên Region trong bảng NPP.</div>`;
+    html += `<div class="hint err" style="margin-top:12px"><b>Thiếu tồn kho:</b>
+      ${noData.map(r => escapeHtml(r.region)).join(', ')} không có dòng nào trong ${escapeHtml(stockSourceName())}.</div>`;
   }
 
   const lowButHasData = rows.filter(r => r.hasStockData && r.inStockRate < 20);
   if(lowButHasData.length){
     html += `<div class="hint warn" style="margin-top:12px"><b>Tỉ lệ còn hàng thấp:</b>
-      ${lowButHasData.map(r => escapeHtml(r.region)+' ('+r.inStockRate+'%)').join(', ')}.
-      Có dữ liệu tồn kho nhưng phần lớn SKU đang hết hàng — nên rà lại trước khi chốt.</div>`;
+      ${lowButHasData.map(r => escapeHtml(r.region)+' ('+r.inStockRate+'%)').join(', ')}.</div>`;
   }
   el.innerHTML = html;
 }
@@ -440,7 +426,7 @@ function renderMergeSuggestions(containerId, merge){
   const el = document.getElementById(containerId);
   if(!el) return;
   if(!merge || !merge.groups.length){
-    el.innerHTML = '<p class="muted">Không có mã MSL nào trùng danh sách SKU — không cần gộp.</p>';
+    el.innerHTML = '<p class="muted">Không có nhóm nào có thể gộp.</p>';
     show('merge-actions', false);
     return;
   }
@@ -455,8 +441,7 @@ function renderMergeSuggestions(containerId, merge){
 
   html += `<div class="hint ${over ? 'warn' : 'ok'}">
     <b>${fits.length}/${merge.groups.length} nhóm</b> gộp được ngay (bớt ${fitSavings.toLocaleString('vi-VN')} mã).
-    ${over ? `<b>${over} nhóm</b> còn lại có mã tự sinh vượt trần <b>${MAX_CODE_LEN} ký tự</b> của DMS —
-      cần bạn tự đặt tên ngắn hơn thì mới chọn được.` : ''}</div>`;
+    ${over ? `${over} nhóm có mã quá ${MAX_CODE_LEN} ký tự, cần đặt tên ngắn hơn.` : ''}</div>`;
 
   html += '<div id="merge-list">';
   merge.groups.forEach((g, i) => {
@@ -533,9 +518,9 @@ function updateMergeSummary(){
   const savedPrd   = picks.reduce((s,i) => s + groups[i].prdRowsSaved, 0);
 
   setHtml('merge-summary', picks.length
-    ? `Đã chọn <b>${picks.length}</b> nhóm — sẽ bớt <b>${savedCodes.toLocaleString('vi-VN')}</b> mã MSL
-       và <b>${savedPrd.toLocaleString('vi-VN')}</b> dòng PRDASSIGN.`
-    : 'Chưa chọn nhóm nào. Bỏ qua bước này nếu bạn muốn giữ nguyên toàn bộ mã MSL.');
+    ? `Đã chọn ${picks.length} nhóm: bớt ${savedCodes.toLocaleString('vi-VN')} mã MSL,
+       ${savedPrd.toLocaleString('vi-VN')} dòng PRDASSIGN.`
+    : 'Chưa chọn nhóm nào.');
 
   const applyBtn = document.getElementById('btn-apply-merge');
   if(applyBtn) applyBtn.disabled = !picks.length;
@@ -563,7 +548,7 @@ function renderDownloadCards(result){
     return `
     <div class="dl-card${empty ? ' is-empty' : ''}">
       <div class="fname">${escapeHtml(spec.file)}</div>
-      <div class="cnt">${count.toLocaleString('vi-VN')} dòng dữ liệu${empty ? ' — không cần upload' : ''}</div>
+      <div class="cnt">${count.toLocaleString('vi-VN')} dòng${empty ? ', không cần upload' : ''}</div>
       ${spec.note ? `<div class="note">${escapeHtml(spec.note)}</div>` : ''}
       <button class="btn secondary" data-dl="${escapeHtml(spec.key)}"${empty ? ' disabled' : ''}>Tải file này</button>
     </div>`;
@@ -601,40 +586,33 @@ function renderUpdateReport(){
   const nothing = !rep.newLists.length && !rep.grownLists.length;
   const manualOnly = nothing && rep.manual.length > 0;
   const banner = setHtml('upd-banner', manualOnly
-    ? `<b>Không có file nào cần upload</b>, nhưng có <b>${rep.manual.length}</b> tổ hợp cần xử lý tay — xem mục &laquo;Cần xử lý tay&raquo; bên dưới.`
+    ? `Không có file cần upload. ${rep.manual.length} tổ hợp cần xử lý tay.`
     : nothing
-    ? '<b>Không có thay đổi nào.</b> Tồn kho hôm nay không làm phát sinh SKU mới cần bổ sung — không cần upload gì cả.'
-    : `<b>Đợt đang chạy: <code>${escapeHtml(rep.datePrefix)}</code></b> &nbsp;|&nbsp; Hiệu lực ${escapeHtml(rep.startDate)} → ${escapeHtml(rep.endDate)}.
-       Mã MSL và ngày hiệu lực được giữ nguyên theo file gốc để DMS cập nhật đúng danh sách đang chạy.`);
+    ? 'Không có thay đổi, không cần upload.'
+    : `Đợt <b><code>${escapeHtml(rep.datePrefix)}</code></b> &nbsp;|&nbsp; Hiệu lực ${escapeHtml(rep.startDate)} → ${escapeHtml(rep.endDate)}`);
   if(banner) banner.className = 'hint ' + (nothing && !manualOnly ? 'ok' : 'warn');
 
   // Ma dang chay khong doi chieu duoc voi Hero New -> khong duoc bo sung SKU
   const warns = [];
   if(rep.unmatchedCodes.length){
-    warns.push(`<b>${rep.unmatchedCodes.length}</b> mã đang chạy không khớp tổ hợp nào trong Hero New hiện tại
-      (VD: <code>${escapeHtml(rep.unmatchedCodes[0])}</code>) nên không được bổ sung SKU.
-      Thường do Hero New đã bỏ tổ hợp đó, hoặc file mốc thiếu dòng CUSTASSIGN của mã.`);
+    warns.push(`${rep.unmatchedCodes.length} mã đang chạy không khớp tổ hợp nào trong HERO NEW
+      (<code>${escapeHtml(rep.unmatchedCodes[0])}</code>), không thêm SKU.`);
   }
   if(rep.outsideCodes.length){
-    warns.push(`<b>${rep.outsideCodes.length}</b> mã gộp còn áp cho tổ hợp đã bị bỏ khỏi Hero New
-      (VD: <code>${escapeHtml(rep.outsideCodes[0])}</code>) — không thêm SKU vào các mã này để khỏi áp cho
-      tổ hợp đã bỏ; SKU mới của các tổ hợp còn lại được tách ra danh sách riêng.`);
+    warns.push(`${rep.outsideCodes.length} mã gộp còn áp cho tổ hợp đã bỏ khỏi HERO NEW
+      (<code>${escapeHtml(rep.outsideCodes[0])}</code>), không thêm SKU vào các mã này.`);
   }
   if(rep.otherBatchCodes.length){
-    warns.push(`<b>${rep.otherBatchCodes.length}</b> mã thuộc đợt khác (khác tiền tố <code>${escapeHtml(rep.datePrefix)}</code>
-      hoặc đã hết hạn, VD: <code>${escapeHtml(rep.otherBatchCodes[0])}</code>) — bỏ qua, chỉ giữ lại trong bộ file mốc.`);
+    warns.push(`${rep.otherBatchCodes.length} mã thuộc đợt khác (<code>${escapeHtml(rep.otherBatchCodes[0])}</code>), bỏ qua.`);
   }
   if(rep.unknownGCodes.length){
-    warns.push(`<b>${rep.unknownGCodes.length}</b> mã có dòng cấp G mang node không tra được ra Region
-      (VD: <code>${escapeHtml(rep.unknownGCodes[0])}</code>).`);
+    warns.push(`${rep.unknownGCodes.length} mã có node G không tra được ra Region (<code>${escapeHtml(rep.unknownGCodes[0])}</code>).`);
   }
   if(rep.unknownUCodes.length){
-    warns.push(`<b>${rep.unknownUCodes.length}</b> mã có dòng cấp U mang mã không tra được ra U/R
-      (VD: <code>${escapeHtml(rep.unknownUCodes[0])}</code>).`);
+    warns.push(`${rep.unknownUCodes.length} mã có mã U không tra được ra U/R (<code>${escapeHtml(rep.unknownUCodes[0])}</code>).`);
   }
   if(rep.noUCodes.length){
-    warns.push(`<b>${rep.noUCodes.length}</b> mã không có dòng cấp U
-      (VD: <code>${escapeHtml(rep.noUCodes[0])}</code>) — danh sách theo Area, cập nhật bằng tool cũ.`);
+    warns.push(`${rep.noUCodes.length} mã không có dòng cấp U (<code>${escapeHtml(rep.noUCodes[0])}</code>), là danh sách theo Area.`);
   }
   show('upd-unmatched', warns.length > 0);
   setHtml('upd-unmatched', warns.join('<br>'));
@@ -643,12 +621,12 @@ function renderUpdateReport(){
   renderLimitedTable('upd-detail-new', rep.newLists,
     ['mslCode','region','otd','seg','ur','skuCount','note'],
     Object.assign({mslCode:'MSL Code',skuCount:'Số SKU',note:'Ghi chú'}, DL),
-    'Không có danh sách mới nào phát sinh.', 300);
+    'Không có danh sách mới.', 300);
 
   renderLimitedTable('upd-detail-grown', rep.grownLists,
     ['mslCode','region','otd','seg','ur','oldTotal','addedCount','newTotal','addedItems','note'],
     Object.assign({mslCode:'MSL Code',oldTotal:'SKU cũ',addedCount:'Thêm',newTotal:'Tổng mới',addedItems:'Item Code được thêm',note:'Ghi chú'}, DL),
-    'Không có danh sách nào cần bổ sung SKU.', 300);
+    'Không có danh sách cần thêm SKU.', 300);
 
   show('upd-sec-manual', rep.manual.length > 0);
   renderLimitedTable('upd-detail-manual', rep.manual,
@@ -671,7 +649,7 @@ function renderUpdateReport(){
   renderLimitedTable('upd-detail-gone', Object.values(goneGrouped),
     ['region','itemCode','avail','count'],
     {region:'Region',itemCode:'Item Code',avail:'Tồn khả dụng (cả Region)',count:'Số danh sách chứa SKU này'},
-    'Không có SKU nào trong DMS bị hết hàng.', 300);
+    'Không có.', 300);
 
   renderDownloadCards(state.result);
 }
