@@ -16,13 +16,14 @@
      stockRegion : ten Region trong bang NPP (DISTRIBUTOR_AREA) / Stock Area,
                    dung de cong ton kho theo Region
    Node lay theo phan dau chung cua node cac Area thuoc Region (VD: Area HNC01 =
-   VN1NR1A01 -> Region North 1 = VN1NR1). North 1 = VN1NR1 khop file mau. */
+   VN1NR1A01 -> Region North 1 = VN1NR1). North 1 = VN1NR1 khop file mau.
+   Nguoi dung da chot: North 1 = N1, HCMC = HCMC, HCMP = HCMP (giu nguyen 4 ky tu). */
 const REGIONS = {
   'North 1': {abbr:'N1', node:'VN1NR1', stockRegion:'North 1'},
   'North 2': {abbr:'N2', node:'VN1NR2', stockRegion:'North 2'},
   'DN':      {abbr:'DN', node:'VN1DNU', stockRegion:'DaNang'},
-  'HCMC':    {abbr:'HC', node:'VN1HMC', stockRegion:'HCMC'},
-  'HCMP':    {abbr:'HP', node:'VN1HMP', stockRegion:'HCMP'},
+  'HCMC':    {abbr:'HCMC', node:'VN1HMC', stockRegion:'HCMC'},
+  'HCMP':    {abbr:'HCMP', node:'VN1HMP', stockRegion:'HCMP'},
   'MK':      {abbr:'MK', node:'VN1MKU', stockRegion:'Mekong'}
 };
 
@@ -41,7 +42,7 @@ const UR_TYPES = {
    Khi da chot: sua gia tri trong REGIONS / UR_TYPES roi xoa dong tuong ung. */
 const UNCONFIRMED_CONFIG = [
   'Mã U của URBAN (01) và RURAL (02) — mới biết chắc HIGHLAND = 03',
-  'Viết tắt Region trong mã: North 2 = N2, DN = DN, HCMC = HC, HCMP = HP, MK = MK — mới biết chắc North 1 = N1'
+  'Viết tắt Region trong mã: North 2 = N2, DN = DN, MK = MK — đã chốt North 1 = N1, HCMC = HCMC, HCMP = HCMP'
 ];
 
 /* Area -> node NPP cap Area. Ban nay khong gan theo Area nua, chi dung bang
@@ -81,8 +82,9 @@ const G_ROW_DIST_CODE = 'SPVB';
 const HQ = 'HQ';
 
 // Gioi han do dai truong tren DMS - vuot qua se bi tu choi khi upload.
-// Ma day du dang 260211_N1_CHTL_A_HL (19 ky tu). Kenh dai (VD: WSDEPO) se vuot
-// 20 -> cong cu bo dau gach sau ngay: 260211N1_WSDEPO_A_HL.
+// Ma day du dang 260211_N1_CHTL_A_HL (19 ky tu). Region / kenh dai lam ma vuot
+// 20 ky tu -> cong cu bo dan dau gach (xem joinCode trong generator.js):
+//   261201HCMC_CHTL_A_UB, 261201HCMPWSMIX_B_RR, 261201HCMCWSDEPO_CHL
 const MAX_CODE_LEN = 20;
 const MAX_DESC_LEN = 50;
 

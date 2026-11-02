@@ -27,18 +27,30 @@ function regionAbbr(region){ const c = resolveRegion(region); return c ? c.abbr 
 function urAbbr(ur){ const c = resolveUr(ur); return c ? c.abbr : ur; }
 
 /**
- * Ma MSL cua mot to hop: <ngay>_<Region>_<Kenh>_<Phan khuc>_<U/R>
- * VD: 260211_N1_CHTL_A_HL. DMS gioi han 20 ky tu nen:
- *   - vuot 20 (kenh dai, VD WSDEPO) -> bo dau gach sau ngay: 260211N1_WSDEPO_A_HL
- *   - van vuot -> bo het dau gach
+ * Ghep ma MSL tu 5 phan [ngay, Region, Kenh, Phan khuc, U/R], noi bang dau gach.
+ * DMS gioi han 20 ky tu: vuot thi bo dan tung dau gach theo thu tu
+ *   1. sau ngay                 260211N1_WSDEPO_B_UB     261201HCMC_CHTL_A_UB
+ *   2. giua Region va Kenh      261201HCMPWSMIX_B_RR
+ *   3. giua Phan khuc va U/R    261201HCMCWSDEPO_CHL
+ *   4. giua Kenh va Phan khuc
+ * Phan khuc luon 1 ky tu va U/R 2 ky tu nen ma van khong trung nhau;
+ * computeTargetLists van kiem tra trung ma cho chac.
  */
+function joinCode(parts){
+  const seps = ['_', '_', '_', '_'];
+  const build = () => parts.map((p, i) => p + (i < seps.length ? seps[i] : '')).join('');
+  let code = build();
+  for(const i of [0, 1, 3, 2]){
+    if(code.length <= MAX_CODE_LEN) break;
+    seps[i] = '';
+    code = build();
+  }
+  return code;
+}
+
+/* Ma MSL cua mot to hop. VD: 260211_N1_CHTL_A_HL */
 function subsetCode(datePrefix, region, otd, seg, ur){
-  const R = regionAbbr(region), U = urAbbr(ur);
-  const full = `${datePrefix}_${R}_${otd}_${seg}_${U}`;
-  if(full.length <= MAX_CODE_LEN) return full;
-  const compact = `${datePrefix}${R}_${otd}_${seg}_${U}`;
-  if(compact.length <= MAX_CODE_LEN) return compact;
-  return `${datePrefix}${R}${otd}${seg}${U}`;
+  return joinCode([datePrefix, regionAbbr(region), otd, seg, urAbbr(ur)]);
 }
 
 /* Mo ta cho mot hoac nhieu to hop (ma gop). Vuot 50 ky tu thi rut gon. */
@@ -327,8 +339,8 @@ function makeUnit(list){
 /**
  * Gop nhieu danh sach co danh sach SKU giong het nhau thanh mot don vi.
  * Ma moi: <ngay>_<cac Region>_<cac Kenh>_<cac Phan khuc>_<cac U/R>
- * VD: 260211_N1_CHTL_A_RR_UB; vuot 20 ky tu thi bo dau gach o phan gop:
- *     260211N1_CHTL_A_RRUB
+ * VD: 260211_N1_CHTL_A_RR_UB; vuot 20 ky tu thi bo dau gach ben trong tung
+ * chieu roi bo dan dau gach giua cac chieu nhu ma thuong: 260211N1_CHTL_A_RRUB
  */
 function makeMergedUnit(lists, datePrefix){
   const uniq = arr => [...new Set(arr)].sort();
@@ -338,9 +350,10 @@ function makeMergedUnit(lists, datePrefix){
   const urs     = uniq(lists.map(l => l.ur));
   const R = regions.map(regionAbbr), U = urs.map(urAbbr);
 
-  const full    = `${datePrefix}_` + [R.join('_'), otds.join('_'), segs.join('_'), U.join('_')].join('_');
-  const compact = `${datePrefix}${R.join('')}_${otds.join('')}_${segs.join('')}_${U.join('')}`;
-  const mslCode = full.length <= MAX_CODE_LEN ? full : compact;
+  const full    = [datePrefix, R.join('_'), otds.join('_'), segs.join('_'), U.join('_')].join('_');
+  const mslCode = full.length <= MAX_CODE_LEN
+    ? full
+    : joinCode([datePrefix, R.join(''), otds.join(''), segs.join(''), U.join('')]);
 
   return {
     mslCode, regions, otds, segs, urs,
