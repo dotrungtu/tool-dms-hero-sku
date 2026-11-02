@@ -12,7 +12,8 @@ const EMPTY_OVERRIDES = {
   urTypes:{},        // Gia tri U/R -> {abbr, code}         (bo sung cho UR_TYPES)
   itemCodes:{},      // SKU Group -> danh sach Item Code nhap tay
   uomExceptions:{},  // Item Code -> {uom, minQty}
-  distArea:{},       // Ma NPP -> [Region, Area]  (bo sung cho DISTRIBUTOR_AREA)
+  distArea:{},       // Ma NPP -> [Region, Area]  (bo sung cho DISTRIBUTOR_AREA, dung chung ban theo Area)
+  distRegion:{},     // Ma NPP -> Region          (chi ban nay: NPP moi nhap Region, khong nhap Area)
   inactiveDist:{}    // Ma NPP -> true            (bo sung cho INACTIVE_DISTRIBUTORS)
 };
 

@@ -221,7 +221,8 @@ function buildStockIndexFromInvt(invtRows){
     if(!ALLOWED_WAREHOUSES.has(whs)){ stats.otherWarehouse++; continue; }
     if(INACTIVE_DISTRIBUTORS.has(dist) || overrides.inactiveDist[dist]){ stats.inactiveDist++; continue; }
 
-    const mapped = DISTRIBUTOR_AREA[dist] || overrides.distArea[dist];
+    const mapped = DISTRIBUTOR_AREA[dist] || overrides.distArea[dist]
+                || (overrides.distRegion[dist] ? [overrides.distRegion[dist], ''] : null);
     if(!mapped){
       unknown.set(dist, (unknown.get(dist)||0) + 1);
       stats.unknownDist++;

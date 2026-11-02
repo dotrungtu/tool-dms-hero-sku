@@ -129,9 +129,9 @@ function renderGapsScreen(){
     return `
     <div class="gap-row gap-row-dist">
       <span class="tag">${escapeHtml(g)}</span>
-      <input type="text" placeholder="Viết tắt trong mã (VD: N1)" data-region-abbr="${escapeHtml(g)}" value="${escapeHtml(ov.abbr||'')}">
-      <input type="text" placeholder="Node G của Region (VD: VN1NR1)" data-region-node="${escapeHtml(g)}" value="${escapeHtml(ov.node||'')}">
-      <input type="text" placeholder="Tên Region trong bảng NPP (VD: Mekong)" data-region-stock="${escapeHtml(g)}" value="${escapeHtml(ov.stockRegion||'')}">
+      <input type="text" placeholder="Viết tắt" data-region-abbr="${escapeHtml(g)}" value="${escapeHtml(ov.abbr||'')}">
+      <input type="text" placeholder="Node G" data-region-node="${escapeHtml(g)}" value="${escapeHtml(ov.node||'')}">
+      <input type="text" placeholder="Region trong bảng NPP" data-region-stock="${escapeHtml(g)}" value="${escapeHtml(ov.stockRegion||'')}">
       <label class="chk"><input type="checkbox" data-skip-region="${escapeHtml(g)}"> Bỏ qua Region này</label>
     </div>`;
   }).join(''));
@@ -141,8 +141,8 @@ function renderGapsScreen(){
     return `
     <div class="gap-row">
       <span class="tag">${escapeHtml(u)}</span>
-      <input type="text" placeholder="Viết tắt trong mã (VD: HL)" data-ur-abbr="${escapeHtml(u)}" value="${escapeHtml(ov.abbr||'')}">
-      <input type="text" placeholder="Mã cấp U trong CUSTASSIGN (VD: 3)" data-ur-code="${escapeHtml(u)}" value="${escapeHtml(ov.code||'')}">
+      <input type="text" placeholder="Viết tắt" data-ur-abbr="${escapeHtml(u)}" value="${escapeHtml(ov.abbr||'')}">
+      <input type="text" placeholder="Mã U" data-ur-code="${escapeHtml(u)}" value="${escapeHtml(ov.code||'')}">
       <label class="chk"><input type="checkbox" data-skip-ur="${escapeHtml(u)}"> Bỏ qua giá trị này</label>
     </div>`;
   }).join(''));
@@ -170,9 +170,9 @@ function renderGapsScreen(){
     <div class="gap-row gap-row-dist">
       <span class="tag">${escapeHtml(d)}</span>
       <span class="muted">${escapeHtml(names.get(d) || '')}</span>
-      <input type="text" placeholder="Region (VD: MK hoặc Mekong)" data-dist-region="${escapeHtml(d)}"
-             value="${escapeHtml((overrides.distArea[d]||[])[0] || '')}">
-      <input type="text" placeholder="Area (không bắt buộc, VD: MK8)" data-dist-area="${escapeHtml(d)}"
+      <input type="text" placeholder="Region" data-dist-region="${escapeHtml(d)}"
+             value="${escapeHtml((overrides.distArea[d]||[])[0] || overrides.distRegion[d] || '')}">
+      <input type="text" placeholder="Area" data-dist-area="${escapeHtml(d)}"
              value="${escapeHtml((overrides.distArea[d]||[])[1] || '')}">
       <label class="chk"><input type="checkbox" data-dist-inactive="${escapeHtml(d)}"> Đã ngưng kinh doanh</label>
     </div>`).join(''));
@@ -207,7 +207,9 @@ function collectGapInputs(){
     if(inp.value.trim()) overrides.itemCodes[g] = inp.value.trim();
   });
 
-  // Nha phan phoi moi trong INVT_MASTER: ban nay chi can Region, Area khong bat buoc
+  // Nha phan phoi moi trong INVT_MASTER: ban nay chi can Region. Co ca Area thi luu vao
+  // distArea (ban theo Area dung chung); chi co Region thi luu rieng o distRegion de
+  // ban theo Area van hoi lai NPP nay thay vi dung mot Area khong co that.
   state.unknownDistributors.forEach(d => {
     const off = document.querySelector(`[data-dist-inactive="${CSS.escape(d)}"]`);
     if(off && off.checked){ overrides.inactiveDist[d] = true; return; }
@@ -215,7 +217,8 @@ function collectGapInputs(){
     const area   = document.querySelector(`[data-dist-area="${CSS.escape(d)}"]`);
     const rv = region ? region.value.trim() : '';
     const av = area ? area.value.trim() : '';
-    if(rv) overrides.distArea[d] = [rv, av || '(chưa rõ)'];
+    if(rv && av) overrides.distArea[d] = [rv, av];
+    else if(rv) overrides.distRegion[d] = rv;
   });
 
   saveOverrides();
@@ -448,8 +451,7 @@ function renderMergeSuggestions(containerId, merge){
   const fitSavings = fits.reduce((s,g) => s+g.savings, 0);
 
   let html = `<div class="hint"><b>Phát hiện ${merge.totalGroups.toLocaleString('vi-VN')} nhóm</b> gồm
-    ${merge.totalCodes.toLocaleString('vi-VN')} mã MSL có danh sách SKU <b>trùng khít tuyệt đối</b>
-    — không thừa, không thiếu một mã hàng nào. Chỉ những nhóm như vậy mới được đề xuất gộp.</div>`;
+    ${merge.totalCodes.toLocaleString('vi-VN')} mã MSL có danh sách SKU giống nhau có thể gộp</div>`;
 
   html += `<div class="hint ${over ? 'warn' : 'ok'}">
     <b>${fits.length}/${merge.groups.length} nhóm</b> gộp được ngay (bớt ${fitSavings.toLocaleString('vi-VN')} mã).
