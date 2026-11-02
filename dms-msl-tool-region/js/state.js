@@ -7,7 +7,7 @@
 
 const EMPTY_OVERRIDES = {
   areaCodes:{},      // (ban theo Area) giu lai de khong mat du lieu cua ban kia
-  otd:{},            // (ban theo Area) giu lai de khong mat du lieu cua ban kia
+  otd:{},            // Loai cua hang -> '3' hoac '4' (dung chung voi ban theo Area)
   regions:{},        // Region -> {abbr, node, stockRegion}  (bo sung cho REGIONS)
   urTypes:{},        // Gia tri U/R -> {abbr, code}         (bo sung cho UR_TYPES)
   itemCodes:{},      // SKU Group -> danh sach Item Code nhap tay
@@ -30,6 +30,15 @@ let overrides = loadOverrides();
 /* Cau hinh cua mot Region / mot gia tri U/R. null neu chua khai bao. */
 function resolveRegion(region){ return REGIONS[region] || overrides.regions[region] || null; }
 function resolveUr(ur){ return UR_TYPES[ur] || overrides.urTypes[ur] || null; }
+/* Tra ve '3' hoac '4' - cap duoc dung cho loai cua hang nay, null neu chua khai bao.
+   Van doc duoc du lieu bo sung dang cu {hasL3, hasL4} da luu trong trinh duyet. */
+function resolveOtd(otd){
+  if(OTD_LEVEL[otd]) return OTD_LEVEL[otd];
+  const ov = overrides.otd[otd];
+  if(!ov) return null;
+  if(typeof ov === 'string') return ov;
+  return ov.hasL3 ? '3' : '4';          // dinh dang cu
+}
 function resolveUom(itemCode){ return UOM_EXCEPTIONS[itemCode] || overrides.uomExceptions[itemCode] || {uom:'PC',minQty:1}; }
 
 function allRegionConfigs(){ return Object.assign({}, overrides.regions, REGIONS); }
@@ -58,7 +67,7 @@ const state = {
   datePrefix: '', startDate: '', endDate: '',
   stockMode: 'onlyInStock',   // 'onlyInStock' | 'includeAll'
   subsets: null,               // Map key -> {region,otd,seg,ur,skuGroups:Set}
-  missingRegions: [], missingUrs: [], missingSkuGroups: [], unknownDistributors: [],
+  missingRegions: [], missingUrs: [], missingOtd: [], missingSkuGroups: [], unknownDistributors: [],
   invtStats: null,             // thong ke buoc loc INVT_MASTER
   stockAreaStats: null,        // thong ke Area cua Stock Area.xlsx khong tra duoc ra Region
   result: null                 // {mode,infoRows,condRows,custRows,prdRows, report:{...}}

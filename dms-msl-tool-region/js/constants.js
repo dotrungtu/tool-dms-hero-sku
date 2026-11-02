@@ -63,11 +63,20 @@ const AREA_TO_DIST_CODE = {
   RR01:'VN1NR2A08', RR02:'VN1NR2A09', RR03:'VN1NR2A10', RR04:'VN1NR2A11'
 };
 
-/* Kenh: HERO NEW chia danh sach theo OTD L4, nen moi danh sach gan dung mot
-   dong cap 4 voi Assignment Code = ma OTD L4 (giong dong CHTL trong file mau).
-   Khong dung cap 3 ('TTON' + ma) nhu ban cu, vi cap 3 se ap cho moi OTD L4
-   cung nhom va trung voi danh sach cua cac OTD L4 khac. */
-const CHANNEL_LEVEL = '4';
+/* Kenh (cot OTD L4 cua HERO NEW): giong ban cu, moi loai cua hang chi dung
+   MOT cap trong MSL_CUSTASSIGN:
+     '3' -> dong cap 3, Assignment Code = 'TTON' + ma kenh  (da bao gom cap 4)
+     '4' -> dong cap 4, Assignment Code = chinh ma kenh     (VD: CHTL trong file mau)
+   Ma kenh chua co trong bang se duoc hoi o Buoc 3 (luu chung voi ban cu). */
+const OTD_LEVEL = {
+  CF:'3', CT:'3', GT:'3', NH:'3', QA:'3', SAC:'3', SPO:'3', VCH:'3',
+
+  CHTL:'4', ITN:'4', KHAC:'4', KS:'4', MM:'4', NT:'4', QSR:'4', QVD:'4',
+  TH:'4', VM:'4', WSC1:'4', WSC2:'4', WSDEPO:'4', WSMIX:'4', WSSTH:'4',
+
+  // "WS" khong co trong du lieu DMS mau, nguoi dung chot dung cap 4.
+  WS:'4'
+};
 
 const UOM_EXCEPTIONS = {
   '10000566':{uom:'RCS',minQty:2}, '10000751':{uom:'RCS',minQty:2}, '10000753':{uom:'RCS',minQty:2},

@@ -114,12 +114,13 @@ function goFromParamsToGaps(){
   const gaps = detectGaps(state.subsets);
   state.missingRegions = gaps.missingRegions;
   state.missingUrs = gaps.missingUrs;
+  state.missingOtd = gaps.missingOtd;
   state.missingSkuGroups = detectMissingSkuGroups(state.subsets, buildProductIndex(state.productRows));
 
   // Doc ton kho de phat hien NPP moi chua khai bao Region
   currentStockIndex();
 
-  const hasGaps = state.missingRegions.length || state.missingUrs.length
+  const hasGaps = state.missingRegions.length || state.missingUrs.length || state.missingOtd.length
                || state.missingSkuGroups.length || state.unknownDistributors.length;
   const gapPill = document.getElementById('step-gaps');
 

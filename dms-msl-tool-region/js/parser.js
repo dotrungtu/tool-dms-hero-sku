@@ -398,13 +398,14 @@ function buildBaselinePrd(rows){
   return map;
 }
 
-/* Region / gia tri U/R co trong HERO NEW nhung chua co cau hinh */
+/* Region / gia tri U/R / ma kenh co trong HERO NEW nhung chua co cau hinh */
 function detectGaps(subsets){
-  const regions = new Set(), urs = new Set();
-  for(const sub of subsets.values()){ regions.add(sub.region); urs.add(sub.ur); }
+  const regions = new Set(), urs = new Set(), otds = new Set();
+  for(const sub of subsets.values()){ regions.add(sub.region); urs.add(sub.ur); otds.add(sub.otd); }
   return {
     missingRegions: [...regions].filter(r => !resolveRegion(r)).sort(),
-    missingUrs: [...urs].filter(u => !resolveUr(u)).sort()
+    missingUrs: [...urs].filter(u => !resolveUr(u)).sort(),
+    missingOtd: [...otds].filter(o => !resolveOtd(o)).sort()
   };
 }
 

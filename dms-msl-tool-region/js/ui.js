@@ -121,6 +121,7 @@ function renderLimitedTable(containerId, rows, cols, labels, emptyMsg, limit){
 function renderGapsScreen(){
   show('sec-regions', state.missingRegions.length > 0);
   show('sec-urs',     state.missingUrs.length > 0);
+  show('sec-otd',     state.missingOtd.length > 0);
   show('sec-sku',     state.missingSkuGroups.length > 0);
 
   setHtml('gap-regions', state.missingRegions.map(g => {
@@ -145,6 +146,16 @@ function renderGapsScreen(){
       <label class="chk"><input type="checkbox" data-skip-ur="${escapeHtml(u)}"> Bỏ qua giá trị này</label>
     </div>`;
   }).join(''));
+
+  setHtml('gap-otd', state.missingOtd.map(o => `
+    <div class="gap-row">
+      <span class="tag">${escapeHtml(o)}</span>
+      <div>
+        <label class="chk"><input type="radio" name="otd-lv-${escapeHtml(o)}" data-otd-level="${escapeHtml(o)}" value="3"> Cấp 3 — <code>TTON${escapeHtml(o)}</code></label>
+        <label class="chk"><input type="radio" name="otd-lv-${escapeHtml(o)}" data-otd-level="${escapeHtml(o)}" value="4" checked> Cấp 4 — <code>${escapeHtml(o)}</code></label>
+      </div>
+      <span class="muted" style="font-size:11.5px">Không chắc? Giữ cấp 4.</span>
+    </div>`).join(''));
 
   setHtml('gap-sku', state.missingSkuGroups.map(g => `
     <div class="gap-row">
@@ -185,6 +196,10 @@ function collectGapInputs(){
     const abbr = val(`[data-ur-abbr="${k}"]`), code = val(`[data-ur-code="${k}"]`);
     if(abbr && code) overrides.urTypes[u] = {abbr, code};
   });
+  state.missingOtd.forEach(o => {
+    const picked = document.querySelector(`[data-otd-level="${CSS.escape(o)}"]:checked`);
+    overrides.otd[o] = picked ? picked.value : '4';
+  });
   document.querySelectorAll('[data-sku]').forEach(inp => {
     const g = inp.dataset.sku;
     const skip = document.querySelector(`[data-skip-sku="${CSS.escape(g)}"]`);
@@ -224,7 +239,11 @@ function renderConfigPanel(){
     </tr></thead><tbody>${urs.map(([u,c]) => `<tr><td><b>${escapeHtml(u)}</b>${UR_TYPES[u] ? '' : ' <span class="badge amber">nhập tay</span>'}</td>
       <td><code>${escapeHtml(c.abbr)}</code></td><td><code>${escapeHtml(c.code)}</code></td></tr>`).join('')}
     </tbody></table></div>`;
-  if(sample) html += `<p class="muted">Ví dụ mã sinh ra: <code>${escapeHtml(sample)}</code></p>`;
+  const l3 = Object.keys(OTD_LEVEL).filter(o => OTD_LEVEL[o] === '3').sort();
+  html += `<p class="muted">Kênh gán <b>cấp 3</b> (<code>TTON</code> + mã): ${l3.map(o => `<code>${escapeHtml(o)}</code>`).join(' ')}.
+    Các kênh khác trong bảng gán <b>cấp 4</b> bằng chính mã kênh; mã kênh mới sẽ được hỏi ở Bước 3.</p>`;
+  if(sample) html += `<p class="muted">Ví dụ mã sinh ra: <code>${escapeHtml(sample)}</code>
+    — mô tả: <code>${escapeHtml(mslDescription(ex, 'CHTL', 'A', exUr))}</code></p>`;
   setHtml('cfg-table', html);
 
   const warn = UNCONFIRMED_CONFIG.length

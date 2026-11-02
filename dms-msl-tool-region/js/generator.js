@@ -53,11 +53,18 @@ function subsetCode(datePrefix, region, otd, seg, ur){
   return joinCode([datePrefix, regionAbbr(region), otd, seg, urAbbr(ur)]);
 }
 
-/* Mo ta cho mot hoac nhieu to hop (ma gop). Vuot 50 ky tu thi rut gon. */
+/* Ten Region / U/R trong mo ta: 'North 1' -> 'North1', 'HIGHLAND' -> 'Highland' */
+function regionLabel(region){ return String(region).replace(/\s+/g, ''); }
+function urLabel(ur){ const t = String(ur).toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); }
+
+/* Mo ta cho mot hoac nhieu to hop (ma gop), theo mau nguoi dung chot:
+     North1_Highland_Danh sách SKU bán chạy_CHTL_A
+   Vuot 50 ky tu (thuong la ma gop) thi rut gon:
+     North1_HighlandRural_SKU bán chạy_CHTL_A */
 function listDescription(regions, otds, segs, urs){
-  const R = regions.map(regionAbbr), U = urs.map(urAbbr);
-  const longDesc  = `${R.join('_')}_Danh sách SKU bán chạy ${otds.join('_')}_${segs.join('_')}_${U.join('_')}`;
-  const shortDesc = `${R.join('')}_SKU bán chạy ${otds.join('')}_${segs.join('')}_${U.join('')}`;
+  const G = regions.map(regionLabel), U = urs.map(urLabel);
+  const longDesc  = `${G.join('_')}_${U.join('_')}_Danh sách SKU bán chạy_${otds.join('_')}_${segs.join('_')}`;
+  const shortDesc = `${G.join('')}_${U.join('')}_SKU bán chạy_${otds.join('')}_${segs.join('')}`;
   return longDesc.length <= MAX_DESC_LEN ? longDesc : shortDesc;
 }
 
@@ -388,7 +395,7 @@ function buildCondRows(mslCode){
 /**
  * Sinh dong CUSTASSIGN cho mot don vi xuat (co the la 1 danh sach hoac
  * nhieu danh sach da gop). Thu tu giong file mau:
- *   cap 4 = OTD L4 | cap R = Phan khuc | cap U = ma U/R | cap G = node Region (SPVB, MSL_DIST)
+ *   cap 3/4 = kenh | cap R = Phan khuc | cap U = ma U/R | cap G = node Region (SPVB, MSL_DIST)
  * Voi don vi da gop thi lay HOP cua tung cap roi khu trung lap.
  */
 function buildCustRows(unit){
@@ -402,7 +409,12 @@ function buildCustRows(unit){
                'Customer Hierarchy Level':level,'Assignment Code':code});
   };
 
-  unit.otds.forEach(o => add(HQ, CHANNEL_LEVEL, o));
+  // Moi kenh chi sinh dung mot dong: cap 3 (TTON+ma) HOAC cap 4 (ma kenh)
+  unit.otds.forEach(o => {
+    const lv = resolveOtd(o);
+    if(lv === '3') add(HQ, '3', 'TTON' + o);
+    else if(lv === '4') add(HQ, '4', o);
+  });
   unit.segs.forEach(sg => add(HQ, 'R', sg));
   unit.urs.forEach(u => { const c = resolveUr(u); add(HQ, 'U', c ? c.code : null); });
   unit.regions.forEach(g => { const c = resolveRegion(g); add(G_ROW_DIST_CODE, 'G', c ? c.node : null); });
