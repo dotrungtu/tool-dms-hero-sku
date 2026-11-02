@@ -141,7 +141,7 @@ function renderGapsScreen(){
     <div class="gap-row">
       <span class="tag">${escapeHtml(u)}</span>
       <input type="text" placeholder="Viết tắt trong mã (VD: HL)" data-ur-abbr="${escapeHtml(u)}" value="${escapeHtml(ov.abbr||'')}">
-      <input type="text" placeholder="Mã cấp U trong CUSTASSIGN (VD: 03)" data-ur-code="${escapeHtml(u)}" value="${escapeHtml(ov.code||'')}">
+      <input type="text" placeholder="Mã cấp U trong CUSTASSIGN (VD: 3)" data-ur-code="${escapeHtml(u)}" value="${escapeHtml(ov.code||'')}">
       <label class="chk"><input type="checkbox" data-skip-ur="${escapeHtml(u)}"> Bỏ qua giá trị này</label>
     </div>`;
   }).join(''));

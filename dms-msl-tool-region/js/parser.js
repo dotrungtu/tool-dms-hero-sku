@@ -333,10 +333,11 @@ function buildBaselineInfo(rows){
   return {prefix, startDate: d.start, endDate: d.end, codes, rows: infoRows};
 }
 
-/* Ma U doc tu Excel co the mat so 0 dau (03 -> 3): dua ve 2 chu so */
+/* Ma U tren DMS PROD la 1 / 2 / 3; file tu UAT ghi 01 / 02 / 03.
+   Bo so 0 dau de hai cach ghi deu doi chieu duoc. */
 function normalizeUrCode(v){
   const t = s(v);
-  return /^\d$/.test(t) ? '0' + t : t;
+  return /^\d+$/.test(t) ? String(parseInt(t, 10)) : t;
 }
 
 /**

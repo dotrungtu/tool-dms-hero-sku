@@ -7,7 +7,8 @@
      - Them cap gan U (Urban/Rural/Highland), MSL_CONDITION co 3 dong H/R/U
    Mau tham chieu: 260211_N1_CHTL_A_HL
      CONDITION : H seq 1, R seq 2, U seq 3
-     CUSTASSIGN: 4 CHTL | R A | U 03 | SPVB MSL_DIST G VN1NR1
+     CUSTASSIGN: 4 CHTL | R A | U 3 | SPVB MSL_DIST G VN1NR1
+   (file mau lay tu UAT ghi U = 03; PROD dung ma 1 / 2 / 3, khong co so 0 dau)
    ========================================================================= */
 
 /* Region trong HERO NEW (cot "Region") ->
@@ -17,7 +18,7 @@
                    dung de cong ton kho theo Region
    Node lay theo phan dau chung cua node cac Area thuoc Region (VD: Area HNC01 =
    VN1NR1A01 -> Region North 1 = VN1NR1). North 1 = VN1NR1 khop file mau.
-   Nguoi dung da chot: North 1 = N1, HCMC = HCMC, HCMP = HCMP (giu nguyen 4 ky tu). */
+   Nguoi dung da chot ca 6 viet tat (HCMC, HCMP giu nguyen 4 ky tu). */
 const REGIONS = {
   'North 1': {abbr:'N1', node:'VN1NR1', stockRegion:'North 1'},
   'North 2': {abbr:'N2', node:'VN1NR2', stockRegion:'North 2'},
@@ -30,20 +31,18 @@ const REGIONS = {
 /* Gia tri cot "U/R" trong HERO NEW ->
      abbr : viet tat dung trong ma MSL
      code : Assignment Code cua dong cap U trong CUSTASSIGN
-   HIGHLAND = HL / 03 lay tu file mau. Viet tat UB / RR da duoc nguoi dung xac nhan. */
+   Ma lay tu man hinh DMS PROD "Them Rural / Urban": 1 URBAN, 2 RURAL, 3 HIGHLAND.
+   Viet tat UB / RR / HL da duoc nguoi dung xac nhan. */
 const UR_TYPES = {
-  'URBAN':    {abbr:'UB', code:'01'},
-  'RURAL':    {abbr:'RR', code:'02'},
-  'HIGHLAND': {abbr:'HL', code:'03'}
+  'URBAN':    {abbr:'UB', code:'1'},
+  'RURAL':    {abbr:'RR', code:'2'},
+  'HIGHLAND': {abbr:'HL', code:'3'}
 };
 
 /* Cac gia tri cau hinh o tren CHUA duoc nguoi dung xac nhan.
    Cong cu hien canh bao o Buoc 2 va Buoc 4 cho toi khi danh sach nay rong.
    Khi da chot: sua gia tri trong REGIONS / UR_TYPES roi xoa dong tuong ung. */
-const UNCONFIRMED_CONFIG = [
-  'Mã U của URBAN (01) và RURAL (02) — mới biết chắc HIGHLAND = 03',
-  'Viết tắt Region trong mã: North 2 = N2, DN = DN, MK = MK — đã chốt North 1 = N1, HCMC = HCMC, HCMP = HCMP'
-];
+const UNCONFIRMED_CONFIG = [];   // 02/11/2026: nguoi dung da chot het
 
 /* Area -> node NPP cap Area. Ban nay khong gan theo Area nua, chi dung bang
    nay de tra Area cua file Stock Area.xlsx ra Region khi Area khong co trong
